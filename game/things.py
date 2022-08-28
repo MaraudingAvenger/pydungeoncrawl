@@ -36,5 +36,3 @@ class Wearable(Equipment):
     value: int
     wear_location: str
     armor_value: int
-
-

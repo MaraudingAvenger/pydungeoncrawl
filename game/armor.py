@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from game.things import Wearable
 from game.effects import Effect
 
+
 @dataclass
 class Clothing(Wearable):
     name = "Clothes"

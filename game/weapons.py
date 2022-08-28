@@ -5,6 +5,7 @@ import random
 from game.effects import Effect
 from game.things import Equipment
 
+
 class Weapon(ABC, Equipment):
     name: str
     weight: float
@@ -26,24 +27,26 @@ class Weapon(ABC, Equipment):
     def __str__(self) -> str:
         return self.__repr__()
 
+
 @dataclass
 class Fist(Weapon):
-    name:str = field(default="fist",init=False)
-    weight:float = field(default=0,init=False)
-    value:int = field(default=0,init=False)
-    min_dmg:int = field(default=1,init=False)
-    max_dmg:int = field(default=4,init=False)
+    name: str = field(default="fist", init=False)
+    weight: float = field(default=0, init=False)
+    value: int = field(default=0, init=False)
+    min_dmg: int = field(default=1, init=False)
+    max_dmg: int = field(default=4, init=False)
 
     def deal_damage(self) -> int:
         return random.randint(self.min_dmg, self.max_dmg)
 
+
 @dataclass
 class Sword(Weapon):
-    name:str = field(default="generic sword")
-    weight: float = field(default=3.0,init=False)
-    value:int = field(default=5,init=False)
-    min_dmg:int = field(default=1,init=False)
-    max_dmg:int = field(default=6,init=False)
+    name: str = field(default="generic sword")
+    weight: float = field(default=3.0, init=False)
+    value: int = field(default=5, init=False)
+    min_dmg: int = field(default=1, init=False)
+    max_dmg: int = field(default=6, init=False)
 
     def deal_damage(self) -> int:
         return random.randint(self.min_dmg, self.max_dmg)

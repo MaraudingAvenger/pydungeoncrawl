@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import random
-from .things import Equipment
+
+from game.effects import Effect
+from game.things import Equipment
 
 class Weapon(ABC, Equipment):
     name: str
@@ -9,6 +11,7 @@ class Weapon(ABC, Equipment):
     value: int
     min_dmg: int
     max_dmg: int
+    effects: list[Effect]
 
     @abstractmethod
     def deal_damage(self) -> int:

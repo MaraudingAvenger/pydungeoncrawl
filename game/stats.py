@@ -68,6 +68,7 @@ class Stat:
         )
 
 
+#TODO: maybe get rid of the Stats class and just use a list of Stat objects instead
 class Stats:
     strength: Stat
     dexterity: Stat

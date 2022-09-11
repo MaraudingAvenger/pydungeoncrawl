@@ -1,5 +1,5 @@
 from game.effects import Effect
-from game.pawn import Pawn
+from entities.pawn import Pawn
 
 
 class Square:

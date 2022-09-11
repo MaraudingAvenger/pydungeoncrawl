@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from game.things import Wearable
+from entities.things import Wearable
 from game.effects import Effect
 
 

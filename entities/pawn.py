@@ -1,5 +1,5 @@
 from game.effects import Effect
-from game.stats import Stats
+from entities.stats import Stats
 
 
 class Pawn:

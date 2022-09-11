@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import random
 
 from game.effects import Effect
-from game.things import Equipment
+from entities.things import Equipment
 
 
 class Weapon(ABC, Equipment):

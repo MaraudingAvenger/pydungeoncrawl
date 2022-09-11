@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import random
 
-from game.effects import Effect
+from entities.effects import Effect
 from entities.things import Equipment
 
 

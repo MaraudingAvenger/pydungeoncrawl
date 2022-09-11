@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from entities.things import Wearable
-from game.effects import Effect
+from entities.effects import Effect
 
 
 @dataclass

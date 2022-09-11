@@ -1,4 +1,4 @@
-from game.effects import Effect
+from entities.effects import Effect
 from entities.stats import Stats
 
 

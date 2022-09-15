@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import random
 
-from entities.effects import Effect
 from entities.things import Equipment
+from entities.effects import Effect
 
 
 class Weapon(ABC, Equipment):

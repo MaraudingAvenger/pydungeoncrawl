@@ -16,7 +16,7 @@ The `Board` is (logically, although maybe not graphically) a 2d grid that contai
 * &#9989; The board will have some kind of representation (unicode string, tiled SVG on a site, etc.)
 * &#9989; grid tiles can be of various types
 * &#9989; grid tiles can be impassable (river, lava floe, wall, barbed wire, moat, etc.)
-* grid tiles can impart effects on things that stand on them or pass over them (`Character` and `Monster`) (fire tiles set pawns on fire, poison tiles, etc.) ?
+* &#9989; grid tiles can impart effects on things that stand on them or pass over them (`Character` and `Monster`) (fire tiles set pawns on fire, poison tiles, etc.) ?
 * grid tiles can be searchable/observable?
 * grid tiles can be destructible? (destroy bridge tile, monster falls into lava/pit/spikes/etc.; useful for a monster that will charge the party)
 

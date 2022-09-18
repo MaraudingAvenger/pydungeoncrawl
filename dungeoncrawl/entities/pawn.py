@@ -1,5 +1,5 @@
-from entities.effects import Effect
-from entities.stats import Stats
+from dungeoncrawl.entities.effects import Effect
+from dungeoncrawl.entities.stats import Stats
 
 
 # TODO: consider making this an abstract base class

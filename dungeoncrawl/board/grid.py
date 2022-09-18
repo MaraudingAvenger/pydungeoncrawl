@@ -1,5 +1,5 @@
-from entities.effects import Effect
-from entities.pawn import Pawn
+from dungeoncrawl.entities.effects import Effect
+from dungeoncrawl.entities.pawn import Pawn
 
 
 class Square:

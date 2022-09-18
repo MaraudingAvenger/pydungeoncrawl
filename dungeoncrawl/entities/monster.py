@@ -1,4 +1,4 @@
-from entities.pawn import Pawn
+from dungeoncrawl.entities.pawn import Pawn
 
 
 class Monster(Pawn):

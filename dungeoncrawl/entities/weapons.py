@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 import random
 
-from entities.items import Weapon
-from entities.effects import Effect, Fire
+from dungeoncrawl.entities.items import Weapon
+from dungeoncrawl.entities.effects import Effect, Fire
 
 
 @dataclass

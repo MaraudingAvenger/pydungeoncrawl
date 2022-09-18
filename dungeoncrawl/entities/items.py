@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Protocol
 
-from entities.effects import Effect
+from dungeoncrawl.entities.effects import Effect
 
 
 class Loot(Protocol):

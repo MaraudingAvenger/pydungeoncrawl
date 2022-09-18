@@ -1,4 +1,4 @@
-from factories.names import NameFactory
+from dungeoncrawl.factories.names import NameFactory
 
 # TODO: I want this to be able to take a list of different
 # types of loot to be able to generate from a specific source.

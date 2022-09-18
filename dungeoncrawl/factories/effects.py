@@ -1,4 +1,4 @@
 import random
 
-from entities.effects import Effect
+from dungeoncrawl.entities.effects import Effect
 

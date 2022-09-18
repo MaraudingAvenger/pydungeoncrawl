@@ -2,19 +2,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Protocol
 
-import faker
-
 from entities.effects import Effect
+
 
 class Loot(Protocol):
     name: str
     weight: float
     value: int
-
-class LootGenerator:
-    def __init__(self, rand_loot:bool= True):
-        self.rand_loot = rand_loot
-        self.fake = faker.Factory().create()
 
 
 @dataclass
@@ -45,6 +39,7 @@ class Wearable(Equipment):
     value: int
     wear_location: str
     armor_value: int
+
 
 class Weapon(ABC, Equipment):
     name: str

@@ -1,31 +1,8 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 import random
 
-from entities.things import Equipment
-from entities.effects import Effect
-
-
-class Weapon(ABC, Equipment):
-    name: str
-    weight: float
-    value: int
-    min_dmg: int
-    max_dmg: int
-    effects: list[Effect]
-
-    @abstractmethod
-    def deal_damage(self) -> int:
-        ...
-
-    def __hash__(self) -> int:
-        return hash((self.name, self.weight, self.min_dmg, self.max_dmg))
-
-    def __repr__(self) -> str:
-        return f"{self.name}-{self.weight} kg-{(self.max_dmg + self.min_dmg)/2} avg dmg"
-
-    def __str__(self) -> str:
-        return self.__repr__()
+from entities.items import Weapon
+from entities.effects import Effect, Fire
 
 
 @dataclass
@@ -50,3 +27,19 @@ class Sword(Weapon):
 
     def deal_damage(self) -> int:
         return random.randint(self.min_dmg, self.max_dmg)
+
+
+@dataclass
+class FireSword(Weapon):
+    '''
+    Magic sword that does 2 points of fire damage with each strike.
+    '''
+    name: str = field(default="sword+1")
+    weight: float = field(default=2.5, init=False)
+    value: int = field(default=25, init=False)
+    min_dmg: int = field(default=2, init=False)
+    max_dmg: int = field(default=7, init=False)
+    magic_effect: Effect = Fire
+
+    def deal_damage(self) -> int:
+        return random.randint(self.min_dmg, self.max_dmg) + self.magic_effect.damage

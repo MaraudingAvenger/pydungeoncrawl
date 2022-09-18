@@ -39,7 +39,7 @@ class FireSword(Weapon):
     value: int = field(default=25, init=False)
     min_dmg: int = field(default=2, init=False)
     max_dmg: int = field(default=7, init=False)
-    magic_effect: Effect = Fire
+    magic_effect: Effect = Effect("fire", 2)
 
     def deal_damage(self) -> int:
         return random.randint(self.min_dmg, self.max_dmg) + self.magic_effect.damage

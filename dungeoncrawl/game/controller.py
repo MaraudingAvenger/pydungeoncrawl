@@ -1,9 +1,9 @@
 from board.grid import Board
 from entities.monster import Monster
 from entities.effects import Effect
-from entities.items import LootGenerator
+from factories.loot import LootFactory
 
 class Controller:
     board: Board
-    loot_pool: LootGenerator
+    loot_pool: LootFactory
     

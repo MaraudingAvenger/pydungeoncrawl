@@ -1,23 +1,24 @@
-from dungeoncrawl.entities.effects import Effect
+from abc import ABC, abstractmethod
+from dungeoncrawl.entities.effects import Effects
 from dungeoncrawl.entities.stats import Stats
 
 
-# TODO: consider making this an abstract base class
-class Pawn:
+class Pawn(ABC):
     name: str
     position: tuple[int]
-    effects: list[Effect]
+    effects: Effects
     stats: Stats
-
-    # TODO: needs to be filled out
-    def __init__(self, name: str, position: tuple[int]) -> None:
-        self.name = name
-        self.position = position
+    health_max: int
+    health: int
 
     @property
     def has_effects(self) -> bool:
-        return len(self.effects) > 0
+        return self.effects.active
 
-    # TODO: needs to be filled out
+    @property
+    def alive(self) -> bool:
+        return self.health > 0
+
+    @abstractmethod
     def move(self, x: int, y: int) -> None:
-        pass
+        ...

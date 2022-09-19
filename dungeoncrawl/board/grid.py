@@ -1,3 +1,4 @@
+
 from dungeoncrawl.entities.effects import Effect
 from dungeoncrawl.entities.pawn import Pawn
 

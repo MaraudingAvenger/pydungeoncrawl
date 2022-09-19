@@ -42,4 +42,4 @@ class FireSword(Weapon):
     magic_effect: Effect = Effect("fire", 2)
 
     def deal_damage(self) -> int:
-        return random.randint(self.min_dmg, self.max_dmg) + self.magic_effect.damage
+        return random.randint(self.min_dmg, self.max_dmg) + self.magic_effect.bonus_damage

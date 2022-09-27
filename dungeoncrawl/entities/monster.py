@@ -1,16 +1,12 @@
 from dungeoncrawl.entities.effects import Effects
-from dungeoncrawl.entities.pawn import Pawn
+from dungeoncrawl.entities.pawn import Pawn, Point
 from dungeoncrawl.entities.stats import Stats
 
 
 class Monster(Pawn):
-    def __init__(self, name: str, position: tuple[int] = (0, 0), **kwargs): # type: ignore
-        self.name = name
-        self.position = position
+    # type: ignore
+    def __init__(self, name: str, position: Point | tuple[int, int] = Point(0, 0), health_max: int = 100):
+        super().__init__(name, position, health_max)
         self.effects = Effects()
         self.stats = Stats()
-        self.health_max = kwargs.get('health_max', 100)
         self.health = self.health_max
-
-    
-

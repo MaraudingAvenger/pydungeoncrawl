@@ -7,3 +7,9 @@ class Controller:
     board: Board
     loot_pool: LootFactory
     
+
+    def tick(self):
+        # tick players (actions and movement)
+        # tick monsters (actions and movement)
+        # iterate through all pawns and tick their effects
+        pass

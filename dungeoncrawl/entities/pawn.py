@@ -39,11 +39,9 @@ class Pawn:
     @singledispatchmethod
     def distance_to(self, other: 'Pawn') -> float:
         return ((self.position.x - other.position.x) ** 2 + (self.position.y - other.position.y) ** 2) ** 0.5
-    
     @distance_to.register
     def _(self, other: Point) -> float:
         return ((self.position.x - other.x) ** 2 + (self.position.y - other.y) ** 2) ** 0.5
-
     @distance_to.register
     def _(self, x:int, y:int) -> float:
         return ((self.position.x - x) ** 2 + (self.position.y - y) ** 2) ** 0.5
@@ -51,11 +49,9 @@ class Pawn:
     @singledispatchmethod
     def distance_from(self, other: 'Pawn') -> float:
         return self.distance_to(other)
-
     @distance_from.register
     def _(self, other: Point) -> float:
         return self.distance_to(other)
-
     @distance_from.register
     def _(self, x:int, y:int) -> float:
         return self.distance_to(x, y)
@@ -67,7 +63,6 @@ class Pawn:
     @singledispatchmethod
     def move_to(self, x: int, y: int) -> None:
         self.position = Point(x, y)
-
     @move_to.register
     def _(self, point: Point) -> None:
         self.position = point
@@ -91,6 +86,10 @@ class Pawn:
     def alive(self) -> bool:
         return self.health > 0
 
+    def take_damage(self, damage: int) -> None:
+        #TODO: consider reflecting damage
+        #TODO: make this work with effects
+        pass
 
 if __name__ == '__main__':
     import random

@@ -10,3 +10,5 @@ class Monster(Pawn):
         self.effects = Effects()
         self.stats = Stats()
         self.health = self.health_max
+
+# vulnerabilities: logic to check effects and double the values if they're in the "vulnerable" category

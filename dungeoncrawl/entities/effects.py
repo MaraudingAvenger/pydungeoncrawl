@@ -31,32 +31,34 @@ class Effect:
     will decrease the Pawn's hit points. The default value is zero.
     """
     name: str = field(init=True, repr=True, hash=True)
-    duration: int | float = field(init=True, default=1, hash=False)
-    category: str = field(init=True, default="none", hash=True)
+    duration: int | float = field(init=True, default=1, repr=True, hash=False)
+    category: str = field(init=True, default="none", repr=True, hash=True)
+    description: str = field(init=True, default="", repr=True, hash=False)
+
 
     # ~~~ Callbacks ~~~#
     # TODO: implement all these in the Effects class
-    on_activate: callable = field(init=True, default=lambda: None, hash=False)  # type: ignore
-    on_deactivate: callable = field(init=True, default=lambda: None, hash=False)  # type: ignore
-    on_tick: callable = field(init=True, default=lambda: None, hash=False)  # type: ignore
-    on_use: callable = field(init=True, default=lambda: None, hash=False)  # type: ignore
+    on_activate: callable = field(init=True, default=lambda: None, hash=False, repr=False)  # type: ignore
+    on_deactivate: callable = field(init=True, default=lambda: None, hash=False, repr=False)  # type: ignore
+    on_tick: callable = field(init=True, default=lambda: None, hash=False, repr=False)  # type: ignore
+    on_use: callable = field(init=True, default=lambda: None, hash=False, repr=False)  # type: ignore
 
-    bonus_movement: int = field(init=True, default=0, hash=False)
+    bonus_movement: int = field(init=True, default=0, hash=False, repr=False)
 
-    heal_over_time: int = field(init=True, default=0, hash=False)
-    damage_over_time: int = field(init=True, default=0, hash=False)
+    heal_over_time: int = field(init=True, default=0, hash=False, repr=False)
+    damage_over_time: int = field(init=True, default=0, hash=False, repr=False)
 
     # TODO: turn these into percentage based only?
-    bonus_damage_output: int = field(init=True, default=0, hash=False)
+    bonus_damage_output: int = field(init=True, default=0, hash=False, repr=False)
     bonus_damage_output_percent: float = field(
-        init=True, default=0, hash=False)
+        init=True, default=0, hash=False, repr=False)
 
-    bonus_damage_received: int = field(init=True, default=0, hash=False)
+    bonus_damage_received: int = field(init=True, default=0, hash=False, repr=False)
     bonus_damage_received_percent: float = field(
-        init=True, default=0, hash=False)
+        init=True, default=0, hash=False, repr=False)
 
-    bonus_max_health: int = field(init=True, default=0, hash=False)
-    bonus_max_health_percent: float = field(init=True, default=0, hash=False)
+    bonus_max_health: int = field(init=True, default=0, hash=False, repr=False)
+    bonus_max_health_percent: float = field(init=True, default=0, hash=False, repr=False)
 
 
 class Effects:
@@ -113,17 +115,40 @@ class Effects:
         'return the number of effects in the collection'
         return len(list(filter(lambda e: e.name.lower() == effect_name.lower(), self._effects)))
 
+    @property
     def stunned(self) -> bool:
         'return True if the collection contains a Stun effect'
         return self.count('Stun') > 0
-
+    
+    @property
     def blinded(self) -> bool:
         'return True if the collection contains a Blind effect'
         return self.count('Blind') > 0
-
+    
+    @property
     def rooted(self) -> bool:
         'return True if the collection contains a Root effect'
         return self.count('Root') > 0
+
+    @property
+    def poisoned(self) -> bool:
+        'return True if the collection contains a Poison effect'
+        return self.count('Poison') > 0
+
+
+    def vulnerabilities(self) -> list[Effect]:
+        'return a list of Vulnerability effects in the collection'
+        return [effect for effect in self._effects if 'vulnerab' in effect.name.lower()]
+
+    def vulnerable_to(self, damage_type: str) -> bool:
+        'return True if the collection contains a Vulnerability effect of the specified damage type'
+        if (vulns := self.vulnerabilities()):
+            return any(damage_type.lower() in e.name.lower() for e in vulns)
+        return False
+
+    @property
+    def vulnerable(self):
+        return bool(self.vulnerabilities())
 
     @property
     def active(self):

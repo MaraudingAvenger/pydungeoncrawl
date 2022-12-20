@@ -20,6 +20,7 @@ class Pawn:
     health_max: int
     health: int
     facing_direction: Point
+    #TODO: add an "action history" functionality to Pawn
 
     def __init__(self,
                  name,

@@ -18,6 +18,7 @@ class Character(Pawn):
         return f"Character({self.name}, {self.position}, {self.health_max}, {self._symbol})"
 
 
+#TODO change the name of this excellent function
 def _WITNESS_MEEEEE(func):
     def wrapper(self, *args, **kwargs):
         self.action = True

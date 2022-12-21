@@ -40,6 +40,7 @@ class Pawn(_Character):
         self.move_history = [self.position]
         self.action_history = []
         self._symbol = symbol
+        self._turn = 0
 
     ####################
     # ~~~ Location ~~~ #
@@ -220,7 +221,7 @@ class Pawn(_Character):
             self._was_hit = True
 
             #TODO: update action log with damage taken
-            
+
             if self.health <= 0:
                 self.health = 0
                 self._is_dead = True
@@ -286,6 +287,7 @@ class Pawn(_Character):
             self._heal(effect.heal_over_time)
         # tick self.effects
         self.effects.tick() # updates durations and removes expired effects
+        self._turn += 1
 
     @singledispatchmethod
     def stacks(self, effect: Effect) -> int:

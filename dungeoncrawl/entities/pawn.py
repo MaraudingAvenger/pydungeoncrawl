@@ -5,27 +5,30 @@ from equipment import Gear, GearSet
 from equipment import Equipment
 from effects import Effects
 
-
 @dataclass
 class Point:
     x: int
     y: int
 
-
-class Pawn:
-    name: str
+@dataclass
+class _Character:
     position: Point
+
+class Pawn(_Character):
+    name: str
     effects: Effects
     equipment: Equipment
     health_max: int
     health: int
     facing_direction: Point
-    #TODO: add an "action history" functionality to Pawn
+    _history: list[Point|str]
+    _symbol: str
 
     def __init__(self,
                  name,
                  position: Point | tuple[int, int],
-                 health_max: int) -> None:
+                 health_max: int,
+                 symbol:str = '@') -> None:
         self.name = name
         self.position = position if isinstance(
             position, Point) else Point(*position)
@@ -33,6 +36,8 @@ class Pawn:
         self.health_max = health_max
         self.health = self.health_max
         self.equipment = Equipment()
+        self._history = []
+        self._symbol = symbol
 
     @property
     def has_effects(self) -> bool:
@@ -42,7 +47,7 @@ class Pawn:
     # ~~~ Measurements ~~~ #
     ########################
     @singledispatchmethod
-    def distance_to(self, other: 'Pawn') -> float:
+    def distance_to(self, other: _Character) -> float:
         return ((self.position.x - other.position.x) ** 2 + (self.position.y - other.position.y) ** 2) ** 0.5
     @distance_to.register
     def _(self, other: Point) -> float:
@@ -52,7 +57,7 @@ class Pawn:
         return ((self.position.x - x) ** 2 + (self.position.y - y) ** 2) ** 0.5
 
     @singledispatchmethod
-    def distance_from(self, other: 'Pawn') -> float:
+    def distance_from(self, other: _Character) -> float:
         return self.distance_to(other)
     @distance_from.register
     def _(self, other: Point) -> float:
@@ -79,7 +84,7 @@ class Pawn:
         self.move_to(point.x, point.y)
 
     @singledispatchmethod
-    def face(self, target: 'Pawn') -> None:
+    def face(self, target: _Character) -> None:
         self.facing_direction = target.position
     @face.register
     def _(self, target: Point) -> None:
@@ -91,30 +96,38 @@ class Pawn:
     def move_down_right(self) -> None:
         self.position.x += 1
         self.position.y -= 1
+        self.face(self.position.x+1, self.position.y-1)
     
     def move_right(self) -> None:
         self.position.x += 1
+        self.face(self.position.x+1, self.position.y)
     
     def move_up_right(self) -> None:
         self.position.x += 1
         self.position.y += 1
+        self.face(self.position.x+1, self.position.y+1)
 
     def move_down_left(self) -> None:
         self.position.x -= 1
         self.position.y -= 1
+        self.face(self.position.x-1, self.position.y-1)
     
     def move_left(self) -> None:
         self.position.x -= 1
+        self.face(self.position.x-1, self.position.y)
     
     def move_up_left(self) -> None:
         self.position.x -= 1
         self.position.y += 1
+        self.face(self.position.x-1, self.position.y+1)
 
     def move_up(self) -> None:
         self.position.y += 1
+        self.face(self.position.x, self.position.y+1)
 
     def move_down(self) -> None:
         self.position.y -= 1
+        self.face(self.position.x, self.position.y-1)
 
     @singledispatchmethod
     def move_toward(self, target: Point) -> None:
@@ -147,13 +160,13 @@ class Pawn:
             self.position = Point(*next(path))
             self.face(*next(path))
     @move_toward.register
-    def _(self, target: 'Pawn') -> None:
+    def _(self, target: _Character) -> None:
         self.move_toward(target.position)
     @move_toward.register
     def _(self, x: int, y: int) -> None:
         self.move_toward(Point(x, y))
 
-    def move_behind(self, target: 'Pawn') -> None:
+    def move_behind(self, target: _Character) -> None:
         pass
     
 
@@ -219,12 +232,12 @@ if __name__ == '__main__':
     print("\nMovement:")
     print(f"moving a to (2, 2)")
     a.move_to(Point(2, 2))
-    print(f"a: {a.name} at {a.position}")
+    print(f"a: {a.name} at {a.position}, facing {a.facing_direction}")
     print(f"moving a to (3, 3)")
     a.move_to(3, 3)
     print(f"moving down")
     a.move_down()
-    print(f"a: {a.name} at {a.position}")
+    print(f"a: {a.name} at {a.position}, facing {a.facing_direction}")
     print("moving left")
     a.move_left()
-    print(f"a: {a.name} at {a.position}")
+    print(f"a: {a.name} at {a.position}, facing {a.facing_direction}")

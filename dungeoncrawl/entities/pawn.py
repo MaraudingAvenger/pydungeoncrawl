@@ -3,7 +3,7 @@ from functools import singledispatchmethod
 
 from dungeoncrawl.entities.equipment import Gear, GearSet
 from dungeoncrawl.entities.equipment import Equipment
-from dungeoncrawl.entities.effects import Effects
+from dungeoncrawl.entities.effects import Effect, Effects
 from dungeoncrawl.utilities.location import Point, distance_between, behinds
 
 
@@ -30,13 +30,14 @@ class Pawn(_Character):
         self.health_max = health_max
         self._health = health_max
         self._is_dead = False
+        self._was_hit = False
         
         # effects
         self.equipment = Equipment()
         self.effects = Effects()
 
         # internal use
-        self.move_history = []
+        self.move_history = [self.position]
         self.action_history = []
         self._symbol = symbol
 
@@ -207,14 +208,22 @@ class Pawn(_Character):
     # ~~~ Combat ~~~ #
     ##################
     def _take_damage(self, damage: int) -> None:
-        pct_extra_damage = damage * self.effects.bonus_damage_received_percent
-        num_extra_damage = self.effects.bonus_damage_received
+        # damage mitigation due to armor
+        damage -= int(round(self.equipment.damage_reduction_percent * damage))
+        
+        # damage changes due to effects
+        damage = int(round(damage * self.effects.bonus_damage_received_percent))
+        damage += self.effects.bonus_damage_received
 
-        dmg = damage + int(round(pct_extra_damage, 0)) + num_extra_damage
+        if damage > 0:
+            self.health -= damage
+            self._was_hit = True
+
+            #TODO: update action log with damage taken
             
-        if dmg > 0:
-            self.health -= dmg
-            self.was_hit = True
+            if self.health <= 0:
+                self.health = 0
+                self._is_dead = True
 
     def _heal(self, amount: int) -> None:
         self.health += amount
@@ -228,14 +237,65 @@ class Pawn(_Character):
         return self.equipment.equip(item)
     def unequip(self, item: Gear|GearSet|str) -> None:
         return self.equipment.unequip(item)
-    def stunned(self) -> bool:
-        return self.effects.stunned
-    def poisoned(self) -> bool:
+    @property
+    def poisoned(self):
         return self.effects.poisoned
-    def rooted(self) -> bool:
+    
+    @property
+    def rooted(self):
         return self.effects.rooted
-    def vulnerable(self) -> bool:
+    
+    @property
+    def stunned(self):
+        return self.effects.stunned
+    
+    @property
+    def blinded(self):
+        return self.effects.blinded
+    
+    @property
+    def active_effects(self):
+        return self.effects.active
+
+    @property
+    def vulnerable(self):
         return self.effects.vulnerable
+
+    @property
+    def vulnerabilities(self):
+        return self.effects.vulnerabilities
+    
+    def vulnerable_to(self, damage_type: str):
+        return self.effects.vulnerable_to(damage_type)
+
+
+    ###############################
+    # ~~~ Effect Management ~~~ #
+    ###############################
+    def _add_effect(self, effect: Effect) -> None:
+        self.effects.add(effect)
+    
+    def tick(self) -> None:
+        # apply effects
+        for effect in self.effects:
+            if effect.new:
+                effect.on_activate()
+                effect.new = False
+            effect.on_tick()
+            self._take_damage(effect.damage_over_time)
+            self._heal(effect.heal_over_time)
+        # tick self.effects
+        self.effects.tick() # updates durations and removes expired effects
+
+    @singledispatchmethod
+    def stacks(self, effect: Effect) -> int:
+        'return the number of stacks of the specified effect in the collection'
+        return self.effects.count(effect)
+    
+    @stacks.register
+    def _(self, effect_name: str) -> int:
+        'return the number of stacks of the specified effect in the collection'
+        return self.effects.count(effect_name)
 
 
 if __name__ == '__main__':

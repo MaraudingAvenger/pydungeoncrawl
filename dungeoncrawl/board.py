@@ -3,17 +3,6 @@ from functools import singledispatchmethod
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.utilities.location import Point
 
-#square
-#  symbol
-#  impassable: bool
-#  is_occupied: bool
-#  is_burning: bool
-#  occupant: pawn
-#  damage: int
-#  
-#  if you try to get the symbol, it returns its own symbol if it's not occupied, or the symbol of the occupant if it is
-#  if it is_burning, it returns 🔥
-#  if it is_lava, it returns 🟥
 
 class Square:
     def __init__(self, position:Point, symbol:str='⬜', impassable:bool=False, is_burning:bool=False, is_lava:bool=False, damage:int=0, occupant:Pawn|None=None) -> None:
@@ -28,6 +17,8 @@ class Square:
 
     @property
     def symbol(self):
+        if self.occupied:
+            return self.occupant._symbol # type: ignore
         return self._symbol
 
     def toggle_burning(self, damage:int=3) -> None:

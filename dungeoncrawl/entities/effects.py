@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from functools import singledispatchmethod
+from typing import Iterator
 
 
 @dataclass
@@ -34,7 +35,7 @@ class Effect:
     duration: int | float = field(init=True, default=1, repr=True, hash=False)
     category: str = field(init=True, default="none", repr=True, hash=True)
     description: str = field(init=True, default="", repr=True, hash=False)
-
+    new:bool = True
 
     # ~~~ Callbacks ~~~#
     # TODO: implement all these in the Effects class
@@ -103,6 +104,8 @@ class Effects:
         'decrement the duration of all effects in the collection'
         for effect in self._effects:
             effect.duration -= 1
+            if effect.duration <= 0:
+                effect.on_deactivate()
         self._effects = list(filter(lambda e: e.duration > 0, self._effects))
 
     @singledispatchmethod
@@ -135,20 +138,20 @@ class Effects:
         'return True if the collection contains a Poison effect'
         return self.count('Poison') > 0
 
-
+    @property
     def vulnerabilities(self) -> list[Effect]:
         'return a list of Vulnerability effects in the collection'
         return [effect for effect in self._effects if 'vulnerab' in effect.name.lower()]
 
     def vulnerable_to(self, damage_type: str) -> bool:
         'return True if the collection contains a Vulnerability effect of the specified damage type'
-        if (vulns := self.vulnerabilities()):
+        if (vulns := self.vulnerabilities):
             return any(damage_type.lower() in e.name.lower() for e in vulns)
         return False
 
     @property
     def vulnerable(self):
-        return bool(self.vulnerabilities())
+        return bool(self.vulnerabilities)
 
     @property
     def active(self):
@@ -173,6 +176,7 @@ class Effects:
                 effect.on_use()
         return sum(effect.damage_over_time for effect in self._effects)
 
+    @property
     def dot(self) -> int:
         'alias for `damage_over_time`'
         return self.damage_over_time
@@ -218,3 +222,12 @@ class Effects:
 
     def get_max_health_effects(self) -> list[Effect]:
         return [effect for effect in self._effects if effect.bonus_max_health != 0]
+
+    def __repr__(self) -> str:
+        return f'Effects({self._effects})'
+    
+    def __str__(self) -> str:
+        return f'Effects({self._effects})'
+    
+    def __iter__(self) -> Iterator[Effect]:
+        return iter(self._effects)

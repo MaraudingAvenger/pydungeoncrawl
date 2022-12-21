@@ -18,8 +18,8 @@ class Gear:
     bonus_damage_output_percent: float = field(
         init=True, default=0, hash=False)
 
-    bonus_damage_received: int = field(init=True, default=0, hash=False)
-    bonus_damage_received_percent: float = field(
+    damage_reduction: int = field(init=True, default=0, hash=False)
+    damage_reduction_percent: float = field(
         init=True, default=0, hash=False)
 
     bonus_max_health: int = field(init=True, default=0, hash=False)
@@ -80,5 +80,27 @@ class Equipment:
         for item in gear_set:
             self.unequip(item)
 
+    @property
+    def damage_reduction(self) -> int:
+        return sum([item.damage_reduction for item in self])
+
+    @property
+    def damage_reduction_percent(self) -> float:
+        return sum([item.damage_reduction_percent for item in self])
+
+    @property
+    def bonus_damage_output(self) -> int:
+        return sum([item.damage for item in self])
+    
+    @property
+    def bonus_damage_output_percent(self) -> float:
+        return sum([item.bonus_damage_output_percent for item in self])
+    
+    def __iter__(self):
+        return iter(self._gear.values())
+    def __repr__(self) -> str:
+        return f"Equipment({', '.join([str(item) for item in self])})"
+    def __str__(self) -> str:
+        return f"Equipment({', '.join([str(item) for item in self])})"
     def __getitem__(self, key: str) -> Gear:
         return self._gear[key]

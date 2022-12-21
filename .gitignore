@@ -1,6 +1,7 @@
 ##### Custom Ignore Stuff
 _old/
 .vscode/
+*.ipynb
 
 ##### Preconfigured Gitignore Stuff
 # Byte-compiled / optimized / DLL files

@@ -2,8 +2,6 @@ from dataclasses import dataclass, field
 from functools import singledispatchmethod
 from typing import Protocol
 
-from dungeoncrawl.entities.effects import Effect
-
 
 class Loot(Protocol):
     name: str
@@ -40,7 +38,7 @@ class Empty(Gear):
 class GearSet:
     name: str = field(init=True, repr=True, hash=True)
     description: str = field(init=True, default="", repr=True, hash=False)
-    gear: list[Gear] = field(init=True, default=[], hash=False)
+    gear: list[Gear] = field(init=True, default_factory=list, hash=False)
 
     def __iter__(self):
         return iter(self.gear)

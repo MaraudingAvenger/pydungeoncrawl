@@ -1,60 +1,93 @@
 from dataclasses import dataclass
 from functools import singledispatchmethod
 
-from equipment import Gear, GearSet
-from equipment import Equipment
-from effects import Effects
+from dungeoncrawl.entities.equipment import Gear, GearSet
+from dungeoncrawl.entities.equipment import Equipment
+from dungeoncrawl.entities.effects import Effects
+from dungeoncrawl.utilities.location import Point, distance_between, behinds
 
-@dataclass
-class Point:
-    x: int
-    y: int
 
 @dataclass
 class _Character:
     position: Point
 
 class Pawn(_Character):
-    name: str
-    effects: Effects
-    equipment: Equipment
-    health_max: int
-    health: int
-    facing_direction: Point
-    _history: list[Point|str]
-    _symbol: str
 
     def __init__(self,
                  name,
                  position: Point | tuple[int, int],
                  health_max: int,
                  symbol:str = '@') -> None:
+        
         self.name = name
-        self.position = position if isinstance(
+        
+        # position
+        self._position = position if isinstance(
             position, Point) else Point(*position)
         self.facing_direction = Point(0, 0)
+        
+        # status
         self.health_max = health_max
-        self.health = self.health_max
+        self._health = health_max
+        self._is_dead = False
+        
+        # effects
         self.equipment = Equipment()
-        self._history = []
+        self.effects = Effects()
+
+        # internal use
+        self.move_history = []
+        self.action_history = []
         self._symbol = symbol
 
+    ####################
+    # ~~~ Location ~~~ #
+    ####################
+    @property
+    def position(self) -> Point:
+        return self._position
+
+    @position.setter
+    def position(self, value: Point | tuple[int, int]) -> None:
+        self._position = value if isinstance(
+            value, Point) else Point(*value)
+        self.move_history.append(self._position)
+
+    @property
+    def points_behind(self) -> tuple[Point,...]:
+        return behinds(self.position, self.facing_direction)
+
+    ##################
+    # ~~~ Status ~~~ #
+    ##################
     @property
     def has_effects(self) -> bool:
         return self.effects.active
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value: int) -> None:
+        if not self._is_dead:
+            self._health = value
+            if self._health < 0:
+                self._health = 0
+            self._is_dead = self._health <= 0
 
     ########################
     # ~~~ Measurements ~~~ #
     ########################
     @singledispatchmethod
     def distance_to(self, other: _Character) -> float:
-        return ((self.position.x - other.position.x) ** 2 + (self.position.y - other.position.y) ** 2) ** 0.5
+        return distance_between(self.position, other.position)
     @distance_to.register
     def _(self, other: Point) -> float:
-        return ((self.position.x - other.x) ** 2 + (self.position.y - other.y) ** 2) ** 0.5
+        return distance_between(self.position, other)
     @distance_to.register
     def _(self, x: int, y: int) -> float:
-        return ((self.position.x - x) ** 2 + (self.position.y - y) ** 2) ** 0.5
+        return distance_between(self.position, Point(x, y))
 
     @singledispatchmethod
     def distance_from(self, other: _Character) -> float:
@@ -66,6 +99,7 @@ class Pawn(_Character):
     def _(self, x: int, y: int) -> float:
         return self.distance_to(x, y)
 
+    #TODO: ALL OF THIS LOGIC IS GOING TO THE CONTROLLER
     ####################
     # ~~~ Movement ~~~ #
     ####################
@@ -130,7 +164,8 @@ class Pawn(_Character):
         self.face(self.position.x, self.position.y-1)
 
     @singledispatchmethod
-    def move_toward(self, target: Point) -> None:
+    def move_toward(self, target: Point) -> None: 
+        
         # use bresenham's algorithm to pick find the next point on the line between the two points
         # https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
@@ -159,39 +194,29 @@ class Pawn(_Character):
             path = bresenham(self.position, target)
             self.position = Point(*next(path))
             self.face(*next(path))
+        
     @move_toward.register
     def _(self, target: _Character) -> None:
         self.move_toward(target.position)
     @move_toward.register
     def _(self, x: int, y: int) -> None:
-        self.move_toward(Point(x, y))
-
-    def move_behind(self, target: _Character) -> None:
-        pass
+        self.move_toward(Point(x, y))      
     
-
-
-    ##################
-    # ~~~ Status ~~~ #
-    ##################
-    @property
-    def alive(self) -> bool:
-        return self.health > 0
 
     ##################
     # ~~~ Combat ~~~ #
     ##################
-    def take_damage(self, damage: int) -> None:
+    def _take_damage(self, damage: int) -> None:
         pct_extra_damage = damage * self.effects.bonus_damage_received_percent
         num_extra_damage = self.effects.bonus_damage_received
 
         dmg = damage + int(round(pct_extra_damage, 0)) + num_extra_damage
-        
+            
         if dmg > 0:
             self.health -= dmg
             self.was_hit = True
 
-    def heal(self, amount: int) -> None:
+    def _heal(self, amount: int) -> None:
         self.health += amount
         if self.health > self.health_max:
             self.health = self.health_max

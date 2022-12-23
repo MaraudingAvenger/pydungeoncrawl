@@ -1,11 +1,19 @@
 import math
 from dataclasses import dataclass
 from functools import singledispatch
+import re
 
+def clean_name(name):
+    name = re.sub(r'([a-z])([A-Z])', r'\1 \2', name)
+    return name.replace('_', ' ').title()
+    
 @dataclass
 class Point:
     x: int
     y: int
+
+    def __repr__(self)->str:
+        return f"({self.x}, {self.y})"
 
 @singledispatch
 def distance_between(a: Point, b: Point) -> float:

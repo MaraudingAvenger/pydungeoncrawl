@@ -4,19 +4,10 @@ from dungeoncrawl.entities.pawn import Pawn, Point
 
 import functools
 
-def memoize(func):
-    @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        self._history.append(f"{self.__name__} used {func.__name__}({args}, {kwargs})")
-        
-        return func(*args, **kwargs)
-    
-    return wrapper
-
 class Monster(Pawn):
     # type: ignore
-    def __init__(self, name: str, position: Point | tuple[int, int] = Point(0, 0), health_max: int = 500):
-        super().__init__(name, position, health_max)
+    def __init__(self, name: str, position: Point | tuple[int, int] = Point(0, 0), health_max: int = 500, symbol: str = '👹'):
+        super().__init__(name=name, position=position, health_max=health_max, symbol=symbol)
         self.effects = Effects()
         self.health = self.health_max
 

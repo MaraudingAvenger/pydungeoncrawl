@@ -18,7 +18,7 @@ class Gear:
     bonus_damage_output_percent: float = field(
         init=True, default=0, hash=False)
 
-    damage_reduction: int = field(init=True, default=0, hash=False)
+    damage_reduction_number: int = field(init=True, default=0, hash=False)
     damage_reduction_percent: float = field(
         init=True, default=0, hash=False)
 
@@ -82,7 +82,7 @@ class Equipment:
 
     @property
     def damage_reduction(self) -> int:
-        return sum([item.damage_reduction for item in self])
+        return sum([item.damage_reduction_number for item in self])
 
     @property
     def damage_reduction_percent(self) -> float:

@@ -21,7 +21,7 @@ class Game:
             self.board.place(pawn, pawn.position)
         self.board.place(self.boss, self.boss.position)
 
-    def move(self, pawn: Pawn, position: Point|tuple[int,int]):
+    def move(self, pawn: Pawn, position: Point):
         if pawn.moved_this_turn:
             result = self.board.place(pawn, position)
             if result != 'success':
@@ -29,6 +29,7 @@ class Game:
 
     def __iter__(self):
         while self.party.is_alive and self.boss.is_alive:
+
             # check movements
             for player in self.party:
                 self.move(player, player.position)

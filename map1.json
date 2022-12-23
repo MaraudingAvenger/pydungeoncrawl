@@ -1,0 +1,1124 @@
+[
+    [
+        {
+            "symbol": "🟥",
+            "impassable": false,
+            "is_burning": false,
+            "is_lava": true,
+            "damage": 0,
+            "position": [
+                0,
+                0
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                0
+            ]
+        },
+        {
+            "symbol": "🔥",
+            "impassable": false,
+            "is_burning": true,
+            "is_lava": false,
+            "damage": 5,
+            "position": [
+                2,
+                0
+            ]
+        },
+        {
+            "symbol": "⬛",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                0
+            ]
+        },
+        {
+            "symbol": "⬛",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                0
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                0
+            ]
+        },
+        {
+            "symbol": "🟩",
+            "impassable": false,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                0
+            ]
+        },
+        {
+            "symbol": "🟫",
+            "impassable": false,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                0
+            ]
+        },
+        {
+            "symbol": "🟦",
+            "impassable": false,
+            "is_burning": false,
+            "is_lava": false,
+            "is_water": true,
+            "damage": 50,
+            "position": [
+                8,
+                0
+            ]
+        },
+        {
+            "symbol": "🟦",
+            "impassable": false,
+            "is_burning": false,
+            "is_lava": false,
+            "is_water": true,
+            "damage": 50,
+            "position": [
+                9,
+                0
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                1
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                1
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                2
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                2
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                3
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                3
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                4
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                4
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                5
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                5
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                6
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                6
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                7
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                7
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                8
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                8
+            ]
+        }
+    ],
+    [
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                0,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                1,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                2,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                3,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                4,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                5,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                6,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                7,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                8,
+                9
+            ]
+        },
+        {
+            "symbol": "⬜",
+            "impassable": true,
+            "is_burning": false,
+            "is_lava": false,
+            "damage": 0,
+            "position": [
+                9,
+                9
+            ]
+        }
+    ]
+]

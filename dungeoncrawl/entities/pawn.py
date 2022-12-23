@@ -5,7 +5,7 @@ from typing import Literal
 from dungeoncrawl.entities.equipment import Gear, GearSet
 from dungeoncrawl.entities.equipment import Equipment
 from dungeoncrawl.entities.effects import Effect, Effects
-from dungeoncrawl.utilities.location import Point, clean_name, distance_between, behinds
+from dungeoncrawl.utilities.location import Point, bresenham, clean_name, distance_between, behinds
 
 
 @dataclass
@@ -185,15 +185,15 @@ class Pawn(_Character):
 
     @singledispatchmethod
     def face(self, target: _Character) -> None:
-        self.facing_direction = target.position
+        self.facing_direction = next(bresenham(self.position, target.position))
 
     @face.register
     def _(self, target: Point) -> None:
-        self.facing_direction = target
+        self.facing_direction = next(bresenham(self.position, target))
 
     @face.register
     def _(self, x: int, y: int) -> None:
-        self.facing_direction = Point(x, y)
+        self.facing_direction = next(bresenham(self.position, Point(x, y)))
 
     def move_up(self) -> None:
         self.position = Point(self.position.x, self.position.y+1)
@@ -230,34 +230,10 @@ class Pawn(_Character):
     @singledispatchmethod
     def move_toward(self, target: Point) -> None:
 
-        # use bresenham's algorithm to pick find the next point on the line between the two points
-        # https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-
-        def bresenham(origin: Point, destination: Point):
-            x1, y1 = origin.x, origin.y
-            x2, y2 = destination.x, destination.y
-            dx = abs(x2 - x1)
-            dy = abs(y2 - y1)
-            sx = 1 if x1 < x2 else -1
-            sy = 1 if y1 < y2 else -1
-            err = dx - dy
-
-            while True:
-                if x1 == x2 and y1 == y2:
-                    break
-                e2 = 2 * err
-                if e2 > -dy:
-                    err = err - dy
-                    x1 = x1 + sx
-                if e2 < dx:
-                    err = err + dx
-                    y1 = y1 + sy
-                yield x1, y1
-
         if self.distance_from(target) > 1.5:
             path = bresenham(self.position, target)
-            self.position = Point(*next(path))
-            self.face(*next(path))
+            self.position = next(path)
+            self.face(next(path))
 
     @move_toward.register
     def _(self, target: _Character) -> None:
@@ -267,18 +243,70 @@ class Pawn(_Character):
     def _(self, x: int, y: int) -> None:
         self.move_toward(Point(x, y))
 
+    
     ##################
     # ~~~ Combat ~~~ #
     ##################
 
-    def _take_damage(self, damage: int) -> None:
+    def _tick_damage(self, effect: Effect) -> None:
+        self.health -= effect.damage_over_time
+        self.health += effect.heal_over_time
+
+        if self.health <= 0:
+            self.health = 0
+            self._is_dead = True
+    
+
+    def _take_damage(self, damager: 'Pawn', damage: int, damage_type: str) -> None:
         #print(self.__class__.__name__, 'took damage!')
+        # trigger reflect
+        self.effects._trigger_reflect(self, damager, damage)
+
         # damage mitigation due to armor
         damage -= int(round(self.equipment.damage_reduction_percent * damage))
 
-        # damage changes due to effects
-        damage += int(round(damage * self.effects.bonus_damage_received_percent))
-        damage += self.effects.bonus_damage_received
+        # #TODO: trigger damage type mitigation effects
+        # for effect in self.effects.get_category(f'{damage_type} resistance'):
+        #     damage -= int(round(effect.damage_reduction_percent * damage))
+
+        #     # trigger the effect on_activate method just in case it has one
+        #     effect.on_activate(
+        #         damager = damager,
+        #         total_damage = damage,
+        #         calculated_damage = damage)
+            
+        #     if damage == 0:
+        #         break
+            
+        # trigger damage modifying effects
+
+        # #TODO: trigger vulnerabilities
+        # for effect in self.effects.get_category(f'{damage_type} vulnerability'):
+        #     damage += int(round(effect.damage_bonus_percent * damage))
+
+        #     # trigger the effect on_activate method just in case it has one
+        #     effect.on_activate(
+        #         damager = damager,
+        #         total_damage = damage,
+        #         calculated_damage = damage)
+
+        #     if damage == 0:
+        #         break
+
+        for effect in self.effects.get_extra_damage_effects():
+            number_damage = effect.take_bonus_damage_amount
+            percent_damage = int(round(effect.take_bonus_damage_percent * damage))
+            
+            # trigger the effect on_activate method just in case it has one
+            effect.on_activate(
+                damager = damager,
+                total_damage = damage,
+                calculated_damage = number_damage + percent_damage)
+
+            damage += (number_damage + percent_damage)
+
+            if damage == 0:
+                break
 
         if damage > 0:
             self.health -= damage
@@ -299,6 +327,7 @@ class Pawn(_Character):
             # alive them if they have health
             if force and self.health > 0:
                 self._is_dead = False
+
 
     ###############################
     # ~~~ Convenience Methods ~~~ #
@@ -352,14 +381,13 @@ class Pawn(_Character):
         # apply effects
         for effect in self.effects:
             if effect.new:
-                effect.on_activate()
+                effect.on_create()
                 effect.new = False
             effect.on_tick()
-            self._take_damage(effect.damage_over_time)
-            self._heal(effect.heal_over_time)
+            self._tick_damage(effect)
 
         # tick self.effects
-        self.effects.tick()  # updates durations and removes expired effects
+        self.effects._tick()  # updates durations and removes expired effects
 
         # decrement ability cooldowns
         if self.ability_cooldowns:

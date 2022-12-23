@@ -2,6 +2,7 @@ import math
 from dataclasses import dataclass
 from functools import singledispatch
 import re
+from typing import Generator
 
 def clean_name(name):
     name = re.sub(r'([a-z])([A-Z])', r'\1 \2', name)
@@ -66,3 +67,24 @@ def angle_behind(x1, y1, x2, y2):
 @angle_behind.register
 def _(location: Point, facing: Point):
     return angle_behind(location.x, location.y, facing.x, facing.y)
+
+def bresenham(origin: Point, destination: Point) -> Generator[Point, None, None]:
+    x1, y1 = origin.x, origin.y
+    x2, y2 = destination.x, destination.y
+    dx = abs(x2 - x1)
+    dy = abs(y2 - y1)
+    sx = 1 if x1 < x2 else -1
+    sy = 1 if y1 < y2 else -1
+    err = dx - dy
+
+    while True:
+        if x1 == x2 and y1 == y2:
+            break
+        e2 = 2 * err
+        if e2 > -dy:
+            err = err - dy
+            x1 = x1 + sx
+        if e2 < dx:
+            err = err + dx
+            y1 = y1 + sy
+        yield Point(x1, y1)

@@ -30,5 +30,5 @@ class DummyBoss(Boss):
 
     @_action_decorator(cooldown=2, melee=True)
     def attack(self, target: Pawn):
-        target._take_damage(10)
+        target._take_damage(self, 10, "physical")
         target.effects.add(Effect(name="Dummy Boss Attack", duration=5, heal_over_time=2))

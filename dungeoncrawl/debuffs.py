@@ -1,0 +1,2 @@
+class ExposeWeakness(Effect):
+    pass

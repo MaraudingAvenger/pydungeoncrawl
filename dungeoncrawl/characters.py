@@ -37,8 +37,8 @@ class DummyHero(Character):
 
     @_action_decorator(cooldown=2, melee=True)
     def ball_punch(self, target: Pawn) -> None:
-        target._take_damage(100)
-        target.effects.add(Effect(name="Dummy Hero Ball Punch", duration=5))
+        target._take_damage(self, 100, "spiritual")
+        target.effects.add(Effect(name="Dummy Hero Ball Punch", damage_over_time=2, duration=5))
 
 
 class Party:

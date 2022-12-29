@@ -1,4 +1,5 @@
 from functools import singledispatchmethod
+import heapq
 
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.utilities.location import Point, bresenham, distance_between
@@ -11,12 +12,16 @@ class Square:
         self._base_symbol = symbol
         self._symbol = symbol
         self._temp_symbol = ''
-        self.impassable = impassable
+        self._impassable = impassable
         self.is_water = is_water
         self.is_burning = is_burning
         self.is_lava = is_lava
         self.damage = damage
         self.occupant = occupant
+
+    @property
+    def impassable(self) -> bool:
+        return self._impassable or self.occupied
 
     @property
     def symbol(self):
@@ -58,7 +63,7 @@ class Square:
 
     def trigger_effect(self) -> None:
         if self.occupied and (self.is_burning or self.is_lava):
-            self.occupant._take_damage(self.damage)  # type: ignore
+            self.occupant._take_damage(None, self.damage, "fire")  # type: ignore
 
     def place(self, new_occupant: Pawn) -> str:
         '''Place a pawn in the square; returns True if successful.'''
@@ -81,11 +86,7 @@ class Board:
     def __init__(self, grid: list[list[Square]] | None = None, grid_size: int = 20):
         if grid:
             self.grid_size = len(grid)
-            self.grid = []
-            for x in range(len(grid)):
-                self.grid.append([])
-                for y in range(len(grid[x])):
-                    self.grid[x].append(grid[y][x])
+            self.grid = grid
         else:
             self.grid_size = grid_size
             self.grid = []
@@ -187,7 +188,6 @@ class Board:
     def get_squares_in_line(self, origin: Point, destination: Point) -> list[Square]|None:
         if self.at(origin) is not None and self.at(destination) is not None and origin != destination:
             return self.get_squares_at_points(*list(bresenham(origin, destination)))
-
 
     def __repr__(self):
         return f"Board({len(self.grid)} * {len(self.grid[0])} grid)"

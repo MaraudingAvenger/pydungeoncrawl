@@ -41,7 +41,7 @@ class Pawn(_Character):
         self.effects = Effects()
 
         # internal use
-        self.move_history = []
+        self.move_history = [self.position]
         self.action_history: list[Action] = []
         self._symbol = symbol
         self._turn = 0
@@ -168,20 +168,22 @@ class Pawn(_Character):
     ####################
     # ~~~ Movement ~~~ #
     ####################
+    def move(self, destination: Point) -> None:
+        if not self._is_dead:
+            return self.move_toward(destination)
 
     @singledispatchmethod
-    def move_to(self, x: int, y: int) -> None:
+    def _teleport(self, x: int, y: int) -> None:
         if self.distance_from(x, y) > 1.5:
             self.position = Point(x, y)
             return
-
         self.facing_direction = Point(
             x+(x-self.position.x), y+(y-self.position.y))
         self.position = Point(x, y)
 
-    @move_to.register
+    @_teleport.register
     def _(self, point: Point) -> None:
-        self.move_to(point.x, point.y)
+        self._teleport(point.x, point.y)
 
     @singledispatchmethod
     def face(self, target: _Character) -> None:
@@ -196,48 +198,62 @@ class Pawn(_Character):
         self.facing_direction = next(bresenham(self.position, Point(x, y)))
 
     def move_up(self) -> None:
-        self.position = Point(self.position.x, self.position.y+1)
-        self.face(self.position.x, self.position.y+1)
+        if not self._is_dead:
+            self.position = Point(self.position.x, self.position.y+1)
+            self.face(self.position.x, self.position.y+1)
 
     def move_left(self) -> None:
-        self.position = Point(self.position.x-1, self.position.y)
-        self.face(self.position.x-1, self.position.y)
+        if not self._is_dead:
+            self.position = Point(self.position.x-1, self.position.y)
+            self.face(self.position.x-1, self.position.y)
 
     def move_right(self) -> None:
-        self.position = Point(self.position.x+1, self.position.y)
-        self.face(self.position.x+1, self.position.y)
+        if not self._is_dead:
+            self.position = Point(self.position.x+1, self.position.y)
+            self.face(self.position.x+1, self.position.y)
 
     def move_down(self) -> None:
-        self.position = Point(self.position.x, self.position.y-1)
-        self.face(self.position.x, self.position.y-1)
+        if not self._is_dead:
+            self.position = Point(self.position.x, self.position.y-1)
+            self.face(self.position.x, self.position.y-1)
 
     def move_down_right(self) -> None:
-        self.position = Point(self.position.x+1, self.position.y-1)
-        self.face(self.position.x+1, self.position.y-1)
+        if not self._is_dead:
+            self.position = Point(self.position.x+1, self.position.y-1)
+            self.face(self.position.x+1, self.position.y-1)
 
     def move_up_right(self) -> None:
-        self.position = Point(self.position.x+1, self.position.y+1)
-        self.face(self.position.x+1, self.position.y+1)
+        if not self._is_dead:
+            self.position = Point(self.position.x+1, self.position.y+1)
+            self.face(self.position.x+1, self.position.y+1)
 
     def move_down_left(self) -> None:
-        self.position = Point(self.position.x-1, self.position.y-1)
-        self.face(self.position.x-1, self.position.y-1)
+        if not self._is_dead:
+            self.position = Point(self.position.x-1, self.position.y-1)
+            self.face(self.position.x-1, self.position.y-1)
 
     def move_up_left(self) -> None:
-        self.position = Point(self.position.x-1, self.position.y+1)
-        self.face(self.position.x-1, self.position.y+1)
+        if not self._is_dead:
+            self.position = Point(self.position.x-1, self.position.y+1)
+            self.face(self.position.x-1, self.position.y+1)
 
     @singledispatchmethod
-    def move_toward(self, target: Point) -> None:
+    def move_toward(self, target: Point|_Character) -> None:
+        if not self._is_dead:
+            if isinstance(target, _Character):
+                target = target.position
 
-        if self.distance_from(target) > 1.5:
-            path = bresenham(self.position, target)
-            self.position = next(path)
-            self.face(next(path))
-
-    @move_toward.register
-    def _(self, target: _Character) -> None:
-        self.move_toward(target.position)
+            if self.distance_from(target) > 1.5:
+                path = bresenham(self.position, target)
+                self.position = next(path)
+                self.face(next(path))
+            else:
+                add = (target.x-self.position.x, target.y-self.position.y)
+                self.position = target
+                self.face(Point(
+                    target.x+(add[0]),
+                    target.y+(add[1])
+                ))
 
     @move_toward.register
     def _(self, x: int, y: int) -> None:
@@ -259,8 +275,10 @@ class Pawn(_Character):
 
     def _take_damage(self, damager: 'Pawn', damage: int, damage_type: str) -> None:
         #print(self.__class__.__name__, 'took damage!')
-        # trigger reflect
-        self.effects._trigger_reflect(self, damager, damage)
+
+        if damager is not None:
+            # trigger reflect
+            self.effects._trigger_reflect(self, damager, damage)
 
         # damage mitigation due to armor
         damage -= int(round(self.equipment.damage_reduction_percent * damage))
@@ -545,10 +563,10 @@ if __name__ == '__main__':
     # testing movement
     print("\nMovement:")
     print(f"moving a to (2, 2)")
-    a.move_to(Point(2, 2))
+    a._teleport(Point(2, 2))
     print(f"a: {a.name} at {a.position}, facing {a.facing_direction}")
     print(f"moving a to (3, 3)")
-    a.move_to(3, 3)
+    a._teleport(3, 3)
     print(f"moving down")
     a.move_down()
     print(f"a: {a.name} at {a.position}, facing {a.facing_direction}")

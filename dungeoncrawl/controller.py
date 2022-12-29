@@ -4,13 +4,28 @@ from dungeoncrawl.bosses import Boss
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.utilities.location import Point
 
-class Game:
+class Level:
     board: Board
     party: Party
     boss: Boss
     turn_count: int
 
     def __init__(self, board: Board, party: Party, boss: Boss):
+        party_starty = [square
+                        for row in board.grid
+                        for square in row
+                        if square.symbol == '🟢']
+        print(party_starty)
+        boss_starty = [square for row in board.grid for square in row if square.symbol == '🔴'][0]
+        
+        for pawn, square in zip(party, party_starty):
+            pawn._position = square.position
+            pawn.move_history = [square.position]
+
+        boss._position = boss_starty.position
+        boss.move_history = [boss_starty.position]
+        
+        print(party)
         self.board = board
         self.party = party
         self.boss = boss
@@ -26,6 +41,11 @@ class Game:
             result = self.board.place(pawn, position)
             if result != 'success':
                 pawn._revert_position(result)
+
+
+class DummyGame(Level):
+    def __init__(self, board: Board, party: Party, boss: Boss):
+        super().__init__(board, party, boss)
 
     def __iter__(self):
         while self.party.is_alive and self.boss.is_alive:

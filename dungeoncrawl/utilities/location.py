@@ -1,3 +1,4 @@
+import heapq
 import math
 from dataclasses import dataclass
 from functools import singledispatch
@@ -16,8 +17,25 @@ class Point:
     def __repr__(self)->str:
         return f"({self.x}, {self.y})"
 
+    def __tuple__(self)->tuple[int, int]:
+        return (self.x, self.y)
+
+    def __getitem__(self, key):
+        return (self.x, self.y)[key]
+
+    def __hash__(self):
+        return hash(self.__tuple__())
+    
+    def __iter__(self):
+        yield self.x
+        yield self.y
+
 @singledispatch
-def distance_between(a: Point, b: Point) -> float:
+def distance_between(a: Point|tuple[int,int], b: Point|tuple[int,int]) -> float:
+    if isinstance(a, tuple):
+        a = Point(*a)
+    if isinstance(b, tuple):
+        b = Point(*b)
     return ((a.x - b.x)**2 + (a.y - b.y)**2)**0.5
 
 @distance_between.register

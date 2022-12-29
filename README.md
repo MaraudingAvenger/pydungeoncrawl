@@ -95,3 +95,26 @@ Glass cannon, damage dealer + status effect specialist, comes with staff/wand an
     ```
   * Actions can be executed one at a time from each pawn inside the action queue. We can do gamey things here like "rolling initiative" to goof up the turn order and make them react to it, or make the monster go first every time, have a well defined turn order, OR if we want to make it like Gloomhaven, which could be pretty rad, we can give each ability a speed value, and have turns execute in speed-order (fast attack vs. power attack vs. quick step vs. long move, etc.)
   * Conditional actions bring a whole new level of programming to it, I like the idea of something like conditional_move, conditional_attack, conditional_ability -- we can limit the alternatives if we want to strategify this a bit.
+
+## TESTING
+<pre>
+bang: no space  
+ba&#x2006;ng: sixth em  
+ba&#x2005;ng: fourth em  
+ba&#x2004;ng: third em   
+ba&#x2002;ng: ensp  
+ba ng: **normal space**  
+ba&#x2003;ng: emsp  
+</pre>
+
+..
+
+..
+
+..
+
+..
+
+..
+
+..

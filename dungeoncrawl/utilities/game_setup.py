@@ -32,7 +32,13 @@ def square_to_dict(s: Square) -> dict[str,Any]:
     }
 
 def json_to_board(json_loc:str|PathLike) -> Board:
-    return Board(grid=[[dict_to_square(square) for square in row] for row in json.load(open(json_loc))])
+    squares = json.load(open(json_loc, encoding='utf-8'))
+    grid = []
+    for _ in range(len(squares)):
+        grid.append([])
 
-def board_to_json(board:Board, json_loc:str|PathLike) -> None:
-    json.dump([[square_to_dict(square) for square in row] for row in board.grid], open(json_loc, 'w'))
+    for row in squares:
+        for square_dict in row:
+            grid[square_dict['position'][1]].append(dict_to_square(square_dict))
+
+    return Board(grid=grid)

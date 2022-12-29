@@ -23,10 +23,10 @@ class Character(Pawn):
                 return action
 
     def __repr__(self):
-        return f"Character({self.name}, {self.position}, {self.health_max}, {self._symbol})"
+        return f"Character({self.name}, {self.position}, {self.health}/{self.health_max}, {self._symbol})"
 
     def __str__(self):
-        return f"Character({self.name}, {self.position}, {self.health_max}, {self._symbol})"
+        return f"Character({self.name}, {self.position}, {self.health}/{self.health_max}, {self._symbol})"
 
 
 class DummyHero(Character):

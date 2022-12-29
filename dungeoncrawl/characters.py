@@ -29,18 +29,6 @@ class Character(Pawn):
         return f"Character({self.name}, {self.position}, {self.health}/{self.health_max}, {self._symbol})"
 
 
-class DummyHero(Character):
-    def __init__(self, name: str, position: Point | tuple[int, int], role, symbol:str='🍄') -> None:
-        super().__init__(name, symbol, role, position, 100)
-        self.equip(ClothArmor())
-        self.turn = None
-
-    @_action_decorator(cooldown=2, melee=True)
-    def ball_punch(self, target: Pawn) -> None:
-        target._take_damage(self, 100, "spiritual")
-        target.effects.add(Effect(name="Dummy Hero Ball Punch", damage_over_time=2, duration=5))
-
-
 class Party:
     def __init__(self, *members: Character) -> None:
         self.members = members
@@ -106,3 +94,16 @@ class Party:
                 for member in self.members
                 if member.name.lower() == key.lower()
                 or key.lower() in member.__class__.__name__.lower()][0]
+
+
+
+class DummyHero(Character):
+    def __init__(self, name: str, position: Point | tuple[int, int], role, symbol:str='🍄') -> None:
+        super().__init__(name, symbol, role, position, 100)
+        self.equip(ClothArmor())
+        self.turn = None
+
+    @_action_decorator(cooldown=2, melee=True)
+    def ball_punch(self, target: Pawn) -> None:
+        target._take_damage(self, 100, "spiritual")
+        target.effects.add(Effect(name="Dummy Hero Ball Punch", damage_over_time=2, duration=5))

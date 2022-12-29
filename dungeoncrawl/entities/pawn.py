@@ -263,6 +263,9 @@ class Pawn(_Character):
     ##################
     # ~~~ Combat ~~~ #
     ##################
+    @property
+    def _base_damage(self) -> int:
+        return self.equipment.bonus_damage_output + int(round(self.equipment.bonus_damage_output * self.equipment.bonus_damage_output_percent))
 
     def _tick_damage(self, effect: Effect) -> None:
         self.health -= effect.damage_over_time

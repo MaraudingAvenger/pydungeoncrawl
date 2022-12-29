@@ -103,7 +103,7 @@ class Board:
     def _tick(self):
         for row in self.grid:
             for square in row:
-                if square.occupied and square.position != square.occupant.position:
+                if square.occupied and square.position != square.occupant.position: # type: ignore
                     square.occupant = None
                 square.trigger_effect()
 

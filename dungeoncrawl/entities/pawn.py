@@ -569,7 +569,7 @@ class Action:
         if (self.type == 'ability' and self.target is not None):
             message += f"{self.action_name} on {self.target}"
         elif self.type == 'damage':
-            message += f"{self.target.name if hasattr(self.target, 'name') else self.target}!"
+            message += f"{self.target.name if hasattr(self.target, 'name') else self.target}!" # type: ignore
         # if it didn't fail and it's a move
         elif isinstance(self.target, Point) and self.type == 'move':
             message += f"to {self.target}"

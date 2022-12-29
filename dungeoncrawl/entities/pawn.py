@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from functools import singledispatchmethod, wraps
-from typing import Literal
+from typing import Any, Literal
+from dungeoncrawl.debuffs import MagicVulnerability
 
 from dungeoncrawl.entities.equipment import Gear, GearSet
 from dungeoncrawl.entities.equipment import Equipment
@@ -12,6 +13,91 @@ from dungeoncrawl.utilities.location import Point, bresenham, clean_name, distan
 class _Character:
     position: Point
 
+
+##############################
+# ~~~ Ability Decorators ~~~ #
+##############################
+
+def _check_can_move(func):
+    @wraps(func)
+    def wrapper(self: 'Pawn', *args, **kwargs):
+        if not self.effects.rooted:
+            return func(self, *args, **kwargs)
+
+        reason = ''
+        if self.effects.rooted:
+            reason = f"{self.name} is rooted!"
+        if self.effects.stunned:
+            reason = f"{self.name} is stunned!"
+        self.action_history.append(
+            Action(
+                turn=self._turn,
+                type='move',
+                action_name=func.__name__,
+                actor=self,
+                target=kwargs.get('target', args[0]),
+                failed=True,
+                failed_reason=reason
+            )
+        )
+    return wrapper
+
+def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, affected_by_blind: bool = True, affected_by_root: bool = False):
+    def actual_decorator(func):
+        @wraps(func)
+        def wrapper(self: 'Pawn', *args, **kwargs):
+            target: Pawn = kwargs.get('target', args[0])
+
+            reason = ''
+            if self._is_dead:
+                reason = f"{self.name} is dead!"
+            elif self.effects.stunned:
+                reason = f"{self.name} is stunned!"
+            elif self.acted_this_turn:
+                reason = f"{self.name} has already acted this turn!"
+            elif self.ability_cooldowns.get(clean_name(func.__name__), 0) > 0:
+                reason = f"{clean_name(func.__name__)} is on cooldown!"
+            elif affected_by_root and self.effects.rooted:
+                reason = f"{self.name} is rooted!"
+            elif affected_by_blind and self.effects.blinded:
+                reason = f"{self.name} is blinded!"
+            elif melee and distance_between(self.position, target.position) > 1.5:
+                reason = f"{target.name} was too far away"
+
+            if reason:
+                self.action_history.append(
+                    Action(
+                        turn=self._turn,
+                        type='ability',
+                        action_name=func.__name__,
+                        actor=self,
+                        target=target,
+                        failed=True,
+                        failed_reason=reason
+                    )
+                )
+                return
+
+            if self.ability_cooldowns.get(clean_name(func.__name__), 0) == 0:
+                self.ability_cooldowns[clean_name(func.__name__)] = cooldown
+            self.acted_this_turn = True
+
+            self.current_action = Action(
+                turn=self._turn,
+                type='ability',
+                action_name=func.__name__,
+                actor=self,
+                target=target
+            )
+            self.action_history.append(self.current_action)
+
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    if _func is None:
+        return actual_decorator
+    return actual_decorator(_func)
 
 class Pawn(_Character):
 
@@ -47,6 +133,7 @@ class Pawn(_Character):
         self._turn = 0
         self.acted_this_turn = False
         self.moved_this_turn = False
+        self.reports: dict[str,Any] = {}
 
     ####################
     # ~~~ Location ~~~ #
@@ -168,6 +255,7 @@ class Pawn(_Character):
     ####################
     # ~~~ Movement ~~~ #
     ####################
+    @_check_can_move
     def move(self, destination: Point) -> None:
         if not self._is_dead:
             return self.move_toward(destination)
@@ -197,47 +285,55 @@ class Pawn(_Character):
     def _(self, x: int, y: int) -> None:
         self.facing_direction = next(bresenham(self.position, Point(x, y)))
 
+    @_check_can_move
     def move_up(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x, self.position.y+1)
             self.face(self.position.x, self.position.y+1)
-
+    
+    @_check_can_move
     def move_left(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x-1, self.position.y)
             self.face(self.position.x-1, self.position.y)
 
+    @_check_can_move
     def move_right(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x+1, self.position.y)
             self.face(self.position.x+1, self.position.y)
 
+    @_check_can_move
     def move_down(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x, self.position.y-1)
             self.face(self.position.x, self.position.y-1)
 
+    @_check_can_move
     def move_down_right(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x+1, self.position.y-1)
             self.face(self.position.x+1, self.position.y-1)
 
+    @_check_can_move
     def move_up_right(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x+1, self.position.y+1)
             self.face(self.position.x+1, self.position.y+1)
 
+    @_check_can_move
     def move_down_left(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x-1, self.position.y-1)
             self.face(self.position.x-1, self.position.y-1)
 
+    @_check_can_move
     def move_up_left(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x-1, self.position.y+1)
             self.face(self.position.x-1, self.position.y+1)
 
-    @singledispatchmethod
+    @_check_can_move
     def move_toward(self, target: Point|_Character) -> None:
         if not self._is_dead:
             if isinstance(target, _Character):
@@ -255,14 +351,11 @@ class Pawn(_Character):
                     target.y+(add[1])
                 ))
 
-    @move_toward.register
-    def _(self, x: int, y: int) -> None:
-        self.move_toward(Point(x, y))
-
     
     ##################
     # ~~~ Combat ~~~ #
     ##################
+
     @property
     def _base_damage(self) -> int:
         return self.equipment.bonus_damage_output + int(round(self.equipment.bonus_damage_output * self.equipment.bonus_damage_output_percent))
@@ -288,9 +381,9 @@ class Pawn(_Character):
 
         # trigger vulnerabilities
         if damage_type == "magic":
-            reduction = sum([effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'magic vuln')])
-            damage += int(round(reduction * damage))
-            self.effects.remove_all(f'magic vulnerabilty')
+            increase = sum([effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'magic vuln')])
+            damage += int(round(increase * damage))
+            self.effects.remove_name(f'magic vulnerabilty')
 
         elif damage_type == "poison":
             if self.effects.find_effect_text(f'poison vulnerability'):
@@ -311,6 +404,7 @@ class Pawn(_Character):
 
             if damage == 0:
                 break
+        
         # trigger resistances        
         reduction = sum([effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'{damage_type} resist')])
         damage -= int(round(reduction * damage))
@@ -394,7 +488,16 @@ class Pawn(_Character):
                 effect.new = False
             effect.on_tick()
             self._tick_damage(effect)
-
+        
+        #TODO: magic vulnerability from fire + frost vuln pair
+        frost = self.effects.find_effect_text('frost vulnerability')
+        fire = self.effects.find_effect_text('fire vulnerability')
+        if frost and fire:
+            for ice_effect, fire_effect in zip(frost, fire):
+                self.effects.add(MagicVulnerability())
+                self.effects.remove_one(ice_effect)
+                self.effects.remove_one(fire_effect)
+        
         # tick self.effects
         self.effects._tick()  # updates durations and removes expired effects
 
@@ -459,11 +562,14 @@ class Action:
             message += "tried to use " if self.failed else "used "
         elif self.type == 'move':
             message += "tried to move " if self.failed else 'moved '
+        elif self.type == 'damage':
+            message += "tried to damage " if self.failed else "damaged "
 
         # if it didn't fail and it's an ability with a target
         if (self.type == 'ability' and self.target is not None):
             message += f"{self.action_name} on {self.target}"
-
+        elif self.type == 'damage':
+            message += f"{self.target.name if hasattr(self.target, 'name') else self.target}!"
         # if it didn't fail and it's a move
         elif isinstance(self.target, Point) and self.type == 'move':
             message += f"to {self.target}"
@@ -483,57 +589,6 @@ class Action:
     def __str__(self):
         return self.__repr__()
 
-
-def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False):
-    def actual_decorator(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            target: Pawn = kwargs.get('target', args[0])
-
-            reason = ''
-            if self._is_dead:
-                reason = f"{self.name} is dead!"
-            elif self.acted_this_turn:
-                reason = f"{self.name} has already acted this turn!"
-            elif self.ability_cooldowns.get(clean_name(func.__name__), 0) > 0:
-                reason = f"{clean_name(func.__name__)} is on cooldown!"
-            elif melee and distance_between(self.position, target.position) > 1.5:
-                reason = f"{target.name} was too far away"
-
-            if reason:
-                self.action_history.append(
-                    Action(
-                        turn=self._turn,
-                        type='ability',
-                        action_name=func.__name__,
-                        actor=self,
-                        target=target,
-                        failed=True,
-                        failed_reason=reason
-                    )
-                )
-                return
-
-            if self.ability_cooldowns.get(clean_name(func.__name__), 0) == 0:
-                self.ability_cooldowns[clean_name(func.__name__)] = cooldown
-            self.acted_this_turn = True
-
-            self.current_action = Action(
-                turn=self._turn,
-                type='ability',
-                action_name=func.__name__,
-                actor=self,
-                target=target
-            )
-            self.action_history.append(self.current_action)
-
-            return func(self, *args, **kwargs)
-
-        return wrapper
-
-    if _func is None:
-        return actual_decorator
-    return actual_decorator(_func)
 
 
 if __name__ == '__main__':

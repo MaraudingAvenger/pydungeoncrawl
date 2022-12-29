@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from functools import singledispatchmethod
 from typing import Iterator
+import time
 
 @dataclass
 class Effect:
@@ -33,11 +34,12 @@ class Effect:
     name: str = field(init=True, repr=True, hash=True)
     duration: int | float = field(init=True, default=1, repr=True, hash=False)
     category: set[str] = field(init=True, default_factory=set, repr=True, hash=True)
-    description: str = field(init=True, default="", repr=True, hash=False)
+    description: str = field(init=True, default="", repr=True, hash=True)
     new: bool = field(init=False, default=True, repr=False, hash=False)
+    symbol: str = field(init=True, default="⚙", repr=True, hash=True)
+    _stamp: float = field(init=False, default_factory=time.time, repr=False, hash=True)
 
     # ~~~ Callbacks ~~~#
-    # TODO: implement all these in the Effects class
     on_create: callable = field( # type: ignore
         init=True, default=lambda *x, **y: None, hash=False, repr=False)
     on_expire: callable = field( # type: ignore
@@ -80,6 +82,12 @@ class Effect:
     reflect_damage_percent: float = field(
         init=True, default=0, hash=False, repr=False)
 
+    def __str__(self):
+        return self.symbol
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
 
 class Effects:
     '''
@@ -104,6 +112,7 @@ class Effects:
 
     def _tick(self) -> None:
         'decrement the duration of all effects in the collection'
+        
         self.reflected = False
         for effect in self._effects:
             effect.duration -= 1
@@ -114,7 +123,7 @@ class Effects:
     def _trigger_reflect(self, damager, target, damage: int) -> None:
         'trigger the effects in the collection that reflect damage'
         self.reflected = True
-        for effect in self.get_category('reflect'):
+        for effect in self.get_any_category_name('reflect'):
             target._take_damage(
                 damager,
                 int(round(damage * effect.reflect_damage_percent + effect.reflect_damage_amount)))
@@ -126,26 +135,33 @@ class Effects:
 
     def add(self, effect: Effect, stacks=1) -> None:
         'add an effect to the collection'
-        # TODO: make effects stack
         for _ in range(stacks):
             self._effects.append(effect)
 
-    @singledispatchmethod
-    def remove_all(self, effect: Effect) -> None:
+    def remove(self, effect: Effect) -> None:
         'remove an effect from the collection'
         self._effects = list(
-            filter(lambda e: e.name != effect.name, self._effects))
+            filter(lambda e: e != effect, self._effects))
 
-    @remove_all.register
-    def _(self, effect_name: str) -> None:
-        'remove an effect from the collection'
+    def remove_category(self, category: str) -> None:
+        'remove all effects in the collection with the given category'
         self._effects = list(
-            filter(lambda e: e.name.lower() != effect_name.lower(), self._effects))
+            filter(lambda e: category not in e.category, self._effects))
 
-    # TODO: make this work
+    def remove_name(self, name: str) -> None:
+        'remove all effects in the collection with the given name'
+        self._effects = list(
+            filter(lambda e: e.name.lower() != name.lower(), self._effects))
+
+    def remove_all(self, *effects: Effect) -> None:
+        'remove one effect from the collection'
+        for effect in effects:
+            self.remove(effect)
+
+    # TODO: __TEST THIS__
     def remove_one(self, effect: Effect) -> None:
         'remove one effect from the collection'
-        pass
+        self._effects.pop(self._effects.index(effect))
 
     @singledispatchmethod
     def count(self, effect: Effect) -> int:
@@ -206,13 +222,21 @@ class Effects:
     # ~~ Getters ~~ #
     #################
 
-    def get_category(self, category: str) -> list[Effect]:
-        'return a list of effects in the collection that have the specified category'
-        return list(filter(lambda e: category.lower() in set(map(lambda s: s.lower(),e.category)), self._effects))
+    def get_all_category_name(self, *categories: str) -> list[Effect]:
+        'return a list of effects in the collection that have all the specified categories'
+        return list(filter(
+            lambda e: all(category.lower() in e.category for category in categories), 
+            self._effects))
 
-    def get_category_effects(self, category: str) -> 'Effects':
+    def get_any_category_name(self, *categories: str) -> list[Effect]:
+        'return a list of effects in the collection that have the specified category'
+        return list(filter(
+            lambda e: any(category.lower() in e.category for category in categories), 
+            self._effects))
+
+    def get_category_effects(self, category: str, ) -> 'Effects':
         'return a new Effects collection of effects in the collection that have the specified category'
-        return Effects(*self.get_category(category))
+        return Effects(*self.get_any_category_name(category))
 
     def find_effect_text(self, text: str) -> list[Effect]:
         'return a list of effects in the collection that have the specified text'
@@ -245,11 +269,11 @@ class Effects:
         'alias for `damage_over_time`'
         return self.damage_over_time
 
-    def get_damage_over_time_effects(self) -> 'Effects':
+    def get_damage_over_time_effects(self) -> list[Effect]:
         'return a new `Effects` object of effects in the collection that deal damage over time'
-        return Effects(*[effect for effect in self._effects if effect.damage_over_time != 0])
+        return [effect for effect in self._effects if effect.damage_over_time != 0]
 
-    def get_dot_effects(self) -> 'Effects':
+    def get_dot_effects(self) -> list[Effect]:
         'alias for `get_damage_over_time_effects()`'
         return self.get_damage_over_time_effects()
 
@@ -321,3 +345,6 @@ class Effects:
 
     def __iter__(self) -> Iterator[Effect]:
         return iter(self._effects)
+    
+    def __getitem__(self, index: int) -> Effect:
+        return self._effects[index]

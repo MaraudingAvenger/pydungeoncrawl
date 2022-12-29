@@ -20,6 +20,10 @@ class Square:
         self.occupant = occupant
 
     @property
+    def name(self) -> str:
+        return f"Tile at {self.position}"
+
+    @property
     def impassable(self) -> bool:
         return self._impassable or self.occupied
 
@@ -63,7 +67,7 @@ class Square:
 
     def trigger_effect(self) -> None:
         if self.occupied and (self.is_burning or self.is_lava):
-            self.occupant._take_damage(None, self.damage, "fire")  # type: ignore
+            self.occupant._take_damage(self, self.damage, "fire")  # type: ignore
 
     def place(self, new_occupant: Pawn) -> str:
         '''Place a pawn in the square; returns True if successful.'''

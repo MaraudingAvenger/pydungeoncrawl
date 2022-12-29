@@ -103,7 +103,7 @@ class DummyHero(Character):
         self.equip(ClothArmor())
         self.turn = None
 
-    @_action_decorator(cooldown=2, melee=True)
+    @_action_decorator(cooldown=2, melee=True) #type: ignore
     def ball_punch(self, target: Pawn) -> None:
         target._take_damage(self, 100, "spiritual")
         target.effects.add(Effect(name="Dummy Hero Ball Punch", damage_over_time=2, duration=5))

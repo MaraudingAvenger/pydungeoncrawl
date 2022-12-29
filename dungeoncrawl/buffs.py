@@ -1,5 +1,31 @@
 #
 # BUFFS
+
+# ❤ (Cleric Heal)
+# 💕 (Druid Heal)
+# 💗 (Shaman Heal)
+# 💖 (Used Cure)
+# ⚡ (Used Stun?)
+# 💙 (Has Heal over Time effect)
+# 💚 (has DoT that can be cured)
+# 🌀 (stunned)
+# 🐌 (rooted) or 🌳
+# 👀 (blind)
+# ⚔ (attacked)
+# 🦶 (moved)
+# ❄ (has Frost exhaustion)
+# 🔥 (has Fire exhaustion)
+# ⚙ (other)
+
+# 🥶 frost
+# 🥵 fire
+# 😵 stun
+# 🤐 silence
+# 🤢 sick/poison
+# 🤪 confusion
+# 🥴 weak
+# 😑 blind
+
 # Might (stacking) – Increase damage done by 5%
 # Toughness (stacking) – Reduces damage received by 5%
 # Next Attack – Increase damage done by X% on next attack (value on creation)
@@ -17,15 +43,64 @@ from dungeoncrawl.debuffs import ExposeWeakness
 
 
 class Parry(Effect):
-    def __init__(self, user: Pawn, boss:Boss) -> None:
-        super().__init__(name="Parry", duration = float('inf'), take_bonus_damage_percent=-1.0)
+    def __init__(self, user: Pawn, boss: Boss) -> None:
+        super().__init__(name="Parry", duration = float('inf'), take_bonus_damage_percent=-1.0, category={'physical', 'buff', 'parry', 'defense', 'defensive'}, symbol='🖕')
         self.user = user
         self.boss = boss
+        self.user.effects.remove_name("might")
+        self.user.effects.remove_name("expose weakness")
+
 
     def on_activate(self, *args, **kwargs) -> None:
         if kwargs.get("total_damage", 0) > 0:
             self.duration = 0
-            self.user.effects.remove_all("might")
-            self.user.effects.remove_all("expose weakness")
-            for _ in range(4):
-                self.boss.effects.add(ExposeWeakness())
+            self.boss.effects.add(ExposeWeakness(duration=3), stacks=4)
+
+class Might(Effect):
+    def __init__(self, duration: int) -> None:
+        super().__init__(name="Might", duration = duration, deal_bonus_damage_percent=.05, category={'physical', 'buff', 'might', 'strength', 'offensive'}, symbol='💪')
+
+class Toughness(Effect):
+    def __init__(self, duration: int) -> None:
+        super().__init__(name="Toughness", duration = duration, take_bonus_damage_percent=-.05, category={'physical', 'buff', 'tough', 'toughness', 'defense', 'defensive'}, symbol='✊')
+
+class CurativeNotes(Effect):
+    def __init__(self, target: Pawn) -> None:
+        self.target = target
+        super().__init__(name="Curative Notes", duration = 2, category={'cure', 'buff'}, symbol='💊')
+
+    def on_expire(self) -> None:
+        self.target.effects.remove_all(*self.target.effects.get_damage_over_time_effects())
+
+class NextAttack(Effect):
+    def __init__(self, damage_percent: float) -> None:
+        super().__init__(name="Next Attack", duration=float('inf'), deal_bonus_damage_percent=damage_percent, category={'physical', 'buff', 'next attack', 'offense', 'offensive'}, symbol='💢')
+
+    def on_activate(self, *args, **kwargs) -> None:
+        self.duration = 0
+
+class Barrier(Effect):
+    def __init__(self, caster: Pawn, duration) -> None:
+        super().__init__(name="Barrier", duration=duration, category={'physical', 'buff', 'barrier', 'shield', 'defense', 'defensive'}, symbol='🤍')
+        self.caster = caster
+
+    def on_activate(self, *args, **kwargs) -> None:
+        self.caster.reports.setdefault('barrier', 0)
+        self.caster.reports['barrier'] += kwargs.get("total_damage", 0)
+
+class Reflect(Effect):
+    def __init__(self, duration) -> None:
+        super().__init__(name="Reflect", duration=duration, category={'physical', 'buff', 'reflect', 'defense', 'offense', 'defensive', 'offensive'}, symbol='♻')
+
+class ShieldStance(Effect):
+    def __init__(self, user: Pawn) -> None:
+        super().__init__(name="Shield Stance", duration=3, category={'physical', 'buff', 'shield stance', 'shield', 'defense', 'defensive'}, symbol='🔰')
+        self.user = user
+
+    def on_activate(self, *args, **kwargs) -> None:
+        self.user.reports.setdefault('shield stance', 0)
+        self.user.reports['shield stance'] += 1
+
+    def on_expire(self) -> None:
+        times = min([15, self.user.reports.get('shield stance', 0) * 5])
+        self.user.effects.add(Toughness(duration=3), stacks=times)

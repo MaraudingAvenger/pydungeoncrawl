@@ -13,12 +13,13 @@ from dungeoncrawl.utilities.location import Point
 
 def dict_to_square(d: dict[str,Any]) -> Square:
     return Square(
-        Point(*d['position']),
-        d['symbol'],
-        d['impassable'],
-        d['is_burning'],
-        d['is_lava'],
-        d['damage'],
+        position=Point(*d['position']),
+        symbol=d['symbol'],
+        impassable=d['impassable'],
+        is_burning=d['is_burning'],
+        is_lava=d['is_lava'],
+        is_water=d['is_water'],
+        damage=d['damage'],
     )
 
 def square_to_dict(s: Square) -> dict[str,Any]:
@@ -28,6 +29,7 @@ def square_to_dict(s: Square) -> dict[str,Any]:
         'impassable': s.impassable,
         'is_burning': s.is_burning,
         'is_lava': s.is_lava,
+        'is_water': s.is_water,
         'damage': s.damage,
     }
 

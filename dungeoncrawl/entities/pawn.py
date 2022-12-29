@@ -283,33 +283,16 @@ class Pawn(_Character):
         # damage mitigation due to armor
         damage -= int(round(self.equipment.damage_reduction_percent * damage))
 
-        # #TODO: trigger damage type mitigation effects
-        # for effect in self.effects.get_category(f'{damage_type} resistance'):
-        #     damage -= int(round(effect.damage_reduction_percent * damage))
+        # trigger vulnerabilities
+        if damage_type == "magic":
+            reduction = sum([effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'magic vuln')])
+            damage += int(round(reduction * damage))
+            self.effects.remove_all(f'magic vulnerabilty')
 
-        #     # trigger the effect on_activate method just in case it has one
-        #     effect.on_activate(
-        #         damager = damager,
-        #         total_damage = damage,
-        #         calculated_damage = damage)
-            
-        #     if damage == 0:
-        #         break
-            
-        # trigger damage modifying effects
+        elif damage_type == "poison":
+            if self.effects.find_effect_text(f'poison vulnerability'):
+                damage *= 2
 
-        # #TODO: trigger vulnerabilities
-        # for effect in self.effects.get_category(f'{damage_type} vulnerability'):
-        #     damage += int(round(effect.damage_bonus_percent * damage))
-
-        #     # trigger the effect on_activate method just in case it has one
-        #     effect.on_activate(
-        #         damager = damager,
-        #         total_damage = damage,
-        #         calculated_damage = damage)
-
-        #     if damage == 0:
-        #         break
 
         for effect in self.effects.get_extra_damage_effects():
             number_damage = effect.take_bonus_damage_amount
@@ -325,12 +308,17 @@ class Pawn(_Character):
 
             if damage == 0:
                 break
+        # trigger resistances        
+        reduction = sum([effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'{damage_type} resist')])
+        damage -= int(round(reduction * damage))
+
+        # update action log with damage taken
+        self.action_history.append(
+            Action(self._turn, "damage", f"{self.name} took {damage if damage >= 0 else 0} damage from {damager.name}!", damager, self, failed=False))
 
         if damage > 0:
             self.health -= damage
             self._was_hit = True
-
-            # TODO: update action log with damage taken
 
             if self.health <= 0:
                 self.health = 0
@@ -446,7 +434,7 @@ class Pawn(_Character):
 @dataclass
 class Action:
     turn: int
-    type: Literal['ability', 'move']
+    type: Literal['ability', 'move', 'damage']
     action_name: str
     actor: Pawn | str
     target: Pawn | None | Point | str

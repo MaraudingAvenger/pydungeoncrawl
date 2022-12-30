@@ -38,7 +38,7 @@ for turn in game:
             else:
                 player.move_toward(boss)
         else:
-            player.ball_punch(boss)
+            player.ball_punch(boss) #type: ignore
 
     time.sleep(0.25)
     os.system('cls')

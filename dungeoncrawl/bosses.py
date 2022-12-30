@@ -42,9 +42,9 @@ class Boss(Monster, abc.ABC):
                 neighbor = current[0] + i, current[1] + j
                 tentative_g_score = gscore[current] + distance_between(current, neighbor)
 
-                if 0 <= neighbor[0] < len(board.grid[0]):
-                    if 0 <= neighbor[1] < len(board.grid):
-                        if board.grid[neighbor[1]][neighbor[0]].impassable and neighbor != goal:
+                if 0 <= neighbor[0] < board.grid_size:
+                    if 0 <= neighbor[1] < board.grid_size:
+                        if (board.at(neighbor).impassable or board.at(neighbor).is_lava) and neighbor != goal: # type: ignore
                             continue
 
                     else:
@@ -60,7 +60,7 @@ class Boss(Monster, abc.ABC):
 
                 if tentative_g_score < gscore.get(neighbor, 0) or neighbor not in [i[1]for i in oheap]:
                     came_from[neighbor] = current
-                    gscore[neighbor] = tentative_g_score
+                    gscore[neighbor] = tentative_g_score # type: ignore
                     fscore[neighbor] = tentative_g_score + distance_between(neighbor, goal)
 
                     heapq.heappush(oheap, (fscore[neighbor], neighbor))

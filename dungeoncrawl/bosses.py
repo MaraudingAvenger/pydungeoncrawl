@@ -2,8 +2,8 @@ import abc
 import heapq
 
 from dungeoncrawl.board import Board
+from dungeoncrawl.debuffs import Embarassed
 from dungeoncrawl.entities.monster import Monster
-from dungeoncrawl.entities.effects import Effect
 from dungeoncrawl.entities.pawn import Pawn, _action_decorator
 from dungeoncrawl.characters import Party
 from dungeoncrawl.utilities.location import Point, distance_between
@@ -65,6 +65,38 @@ class Boss(Monster, abc.ABC):
 
                     heapq.heappush(oheap, (fscore[neighbor], neighbor))
 
+
+##################################
+# ~~ Training Scenario Bosses ~~ #
+##################################
+
+# ~~ First Scenario Boss ~~ #
+
+class TrainingDummy(Boss):
+    def __init__(self):
+        name="Training Dummy"
+        position=Point(0, 0)
+        health_max=1
+        super().__init__(name=name, position=position, health_max=health_max)
+
+    def get_target(self, party: Party) -> Pawn:
+        return party.closest_to(self)
+
+    @_action_decorator(cooldown=2, melee=False, affected_by_blind=False) # type: ignore
+    def shout_at(self, target: Pawn):
+        target._add_effect(Embarassed())
+
+    def _tick_logic(self, party: Party, board: Board):
+        target = self.get_target(party)
+        self.shout_at(target)
+
+
+
+
+###################
+# ~~ TEST BOSS ~~ #
+###################
+
 class DummyBoss(Boss):
     def __init__(self):
         name="Dummy Boss"
@@ -85,6 +117,6 @@ class DummyBoss(Boss):
         else:
             self.attack(target)
 
-    @_action_decorator(cooldown=2, melee=True)
+    @_action_decorator(cooldown=2, melee=True) # type: ignore
     def attack(self, target: Pawn):
         target._take_damage(self, 10, "physical")

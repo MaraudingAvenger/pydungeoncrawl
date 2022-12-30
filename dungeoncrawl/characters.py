@@ -60,6 +60,12 @@ class Party:
         for member in self.members:
             member.effects.add(effect)
 
+    def closest_to(self, target: Pawn) -> Character:
+        return min(self.members, key=lambda x: x.distance_from(target))
+
+    def furthest_from(self, target: Pawn) -> Character:
+        return max(self.members, key=lambda x: x.distance_from(target))
+
     @property
     def tank(self) -> Pawn:
         return self._tank

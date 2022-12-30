@@ -2,11 +2,11 @@ import time
 import os
 import random
 
+from termcolor import colored
+
 from dungeoncrawl.characters import DummyHero, Party
 from dungeoncrawl.bosses import DummyBoss
-from dungeoncrawl.board import Board
 from dungeoncrawl.controller import DummyGame
-from dungeoncrawl.utilities.location import Point
 from dungeoncrawl.utilities.game_setup import json_to_board
 
 boss = DummyBoss()
@@ -40,5 +40,10 @@ for turn in game:
         else:
             player.ball_punch(boss)
 
-    time.sleep(0.5)
+    time.sleep(0.25)
     os.system('cls')
+print()
+if boss.is_alive:
+    print(colored("YOU DIED", "red"))
+else:
+    print(colored("you win!", "green"))

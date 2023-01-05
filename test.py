@@ -1,10 +1,10 @@
-import time
-import os
 import random
+import os
+import time
 
 from termcolor import colored
 
-from dungeoncrawl.characters import DummyHero, Party
+from dungeoncrawl.entities.characters import DummyHero, Party
 from dungeoncrawl.bosses import DummyBoss
 from dungeoncrawl.controller import DummyGame
 from dungeoncrawl.utilities.game_setup import json_to_board
@@ -19,9 +19,10 @@ party = Party(tank, healer, dps1, dps2)
 
 board = json_to_board('C:\\Users\\marau\\Coding\\Python\\pynight\\pydungeoncrawl\\dungeoncrawl\\base_maps\\pathtest.json')
 
-game = DummyGame(board, party, boss)
+game = DummyGame(board, party, boss, show_board=False)
 
 for turn in game:
+    print(game)
     for player in party:
         if player.distance_from(boss) > 1.5:
             if player.last_action_failed:
@@ -39,10 +40,8 @@ for turn in game:
                 player.move_toward(boss)
         else:
             player.ball_punch(boss) #type: ignore
-
-    time.sleep(0.25)
+    time.sleep(0.1)
     os.system('cls')
-print()
 if boss.is_alive:
     print(colored("YOU DIED", "red"))
 else:

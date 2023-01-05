@@ -1,5 +1,8 @@
+import time
+from IPython.display import clear_output
+
 from dungeoncrawl.board import Board
-from dungeoncrawl.characters import Party
+from dungeoncrawl.entities.characters import Party
 from dungeoncrawl.bosses import Boss
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.utilities.location import Point
@@ -10,12 +13,11 @@ class Level:
     boss: Boss
     turn_count: int
 
-    def __init__(self, board: Board, party: Party, boss: Boss):
+    def __init__(self, board: Board, party: Party, boss: Boss, show_board: bool = True, tick_speed: float = 0.25):
         party_starty = [square
                         for row in board.grid
                         for square in row
                         if square.symbol == '🟢']
-        print(party_starty)
         boss_starty = [square for row in board.grid for square in row if square.symbol == '🔴'][0]
         
         for pawn, square in zip(party, party_starty):
@@ -25,11 +27,12 @@ class Level:
         boss._position = boss_starty.position
         boss.move_history = [boss_starty.position]
         
-        print(party)
         self.board = board
         self.party = party
         self.boss = boss
         self.turn_count = 0
+        self.show_board = show_board
+        self.tick_speed = tick_speed
         
         # place the pawns
         for pawn in self.party:
@@ -42,10 +45,9 @@ class Level:
             if result != 'success':
                 pawn._revert_position(result)
 
-
-class DummyGame(Level):
-    def __init__(self, board: Board, party: Party, boss: Boss):
-        super().__init__(board, party, boss)
+    @property
+    def _marquis(self):
+        return f"{self.party._marquis}\n{'_'*80}\n{self.boss._marquis}"
 
     def __iter__(self):
         while self.party.is_alive and self.boss.is_alive:
@@ -59,14 +61,17 @@ class DummyGame(Level):
                 self.boss._tick_logic(self.party, self.board)
                 self.move(self.boss, self.boss.position)
             
+
             # send tick to party, boss
             self.party._tick()
             self.board._tick()
 
             self.turn_count += 1
 
-            # display the board
-            print(self.board)
+            if self.show_board:
+                clear_output(wait=True)
+                print(self)
+                time.sleep(self.tick_speed)
 
             # player turns happen here
             yield self.turn_count
@@ -75,6 +80,14 @@ class DummyGame(Level):
         self.boss._tick()
         self.party._tick()
         self.board._tick()
-        print(self.board)
+        
+        clear_output(wait=True)
+        print(self)
         yield self.turn_count
 
+    def __str__(self):
+        return f"{self._marquis}\n{self.board}"
+
+class DummyGame(Level):
+    def __init__(self, board: Board, party: Party, boss: Boss, show_board: bool = True, tick_speed: float = 0.25):
+        super().__init__(board, party, boss, show_board, tick_speed)

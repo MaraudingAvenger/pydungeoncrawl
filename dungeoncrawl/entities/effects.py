@@ -2,6 +2,22 @@ from dataclasses import dataclass, field
 from functools import singledispatchmethod
 from typing import Iterator
 import time
+import hashlib
+
+_SORT_PRIORITY = {
+    "Might": 1,
+    "Toughness": 2,
+    "Frailty": 3,
+    "Expose Weakness": 4,
+    "Barrier": 5,
+    "HoT": 6,
+    "DoT": 7,
+    "Blind": 8,
+    "Stun": 9,
+    "Root": 10,
+    "Reflect": 11
+}
+
 
 @dataclass
 class Effect:
@@ -33,21 +49,19 @@ class Effect:
     """
     name: str = field(init=True, repr=True, hash=True)
     duration: int | float = field(init=True, default=1, repr=True, hash=False)
-    category: set[str] = field(init=True, default_factory=set, repr=True, hash=True)
+    category: set[str] = field(
+        init=True, default_factory=set, repr=True, hash=True)
     description: str = field(init=True, default="", repr=True, hash=True)
     new: bool = field(init=False, default=True, repr=False, hash=False)
     symbol: str = field(init=True, default="⚙", repr=True, hash=True)
-    _stamp: float = field(init=False, default_factory=time.time, repr=False, hash=True)
+    _stamp: float = field(
+        init=False, default_factory=time.time, repr=False, hash=True)
 
     # ~~~ Callbacks ~~~#
-    on_create: callable = field( # type: ignore
-        init=True, default=lambda *x, **y: None, hash=False, repr=False)
-    on_expire: callable = field( # type: ignore
-        init=True, default=lambda *x, **y: None, hash=False, repr=False)
-    on_tick: callable = field( # type: ignore
-        init=True, default=lambda *x, **y: None, hash=False, repr=False)
-    on_activate: callable = field( # type: ignore
-        init=True, default=lambda *x, **y: None, hash=False, repr=False)
+    on_create = lambda *x, **y: None
+    on_expire = lambda *x, **y: None
+    on_tick = lambda *x, **y: None
+    on_activate = lambda *x, **y: None
 
     # ~~~ Bonus effects ~~~#
     # movement
@@ -69,8 +83,7 @@ class Effect:
         init=True, default=0, hash=False, repr=False)
 
     # damage when being attacked
-    
-    ## can be positive or negative
+    # can be positive or negative
     take_bonus_damage_amount: int = field(
         init=True, default=0, hash=False, repr=False)
     take_bonus_damage_percent: float = field(
@@ -86,7 +99,14 @@ class Effect:
         return self.symbol
 
     def __eq__(self, other):
-        return hash(self) == hash(other)
+        if not isinstance(other, Effect):
+            raise NotImplemented("Cannot compare Effect to non-Effect object")
+        return self.__hash__() == other.__hash__()
+
+    def __hash__(self):
+        return int.from_bytes(hashlib.md5(''.join((
+                self.name, ''.join(self.category), self.description, self.symbol
+            )).encode()).digest())
 
 
 class Effects:
@@ -104,15 +124,14 @@ class Effects:
     def __init__(self, *effects: Effect):
         self._effects: list[Effect] = list(effects) if effects else []
         self._reflected = False
-    
-    
+
     #################################
     # ~~ Tick and trigger methds ~~ #
     #################################
 
     def _tick(self) -> None:
         'decrement the duration of all effects in the collection'
-        
+
         self.reflected = False
         for effect in self._effects:
             effect.duration -= 1
@@ -128,7 +147,6 @@ class Effects:
                 damager,
                 int(round(damage * effect.reflect_damage_percent + effect.reflect_damage_amount)))
 
-    
     ########################################
     # ~~ Add, remove, and count effects ~~ #
     ########################################
@@ -166,14 +184,13 @@ class Effects:
     @singledispatchmethod
     def count(self, effect: Effect) -> int:
         'return the number of effects in the collection'
-        return len(list(filter(lambda e: e.name.lower() == effect.name.lower(), self._effects)))
+        return len(list(filter(lambda e: e.name == effect.name, self._effects)))
 
     @count.register
     def _(self, effect_name: str) -> int:
         'return the number of effects in the collection'
         return len(list(filter(lambda e: e.name.lower() == effect_name.lower(), self._effects)))
 
-    
     #############################################
     # ~~~ Convenience properties and methods ~~~#
     #############################################
@@ -214,10 +231,13 @@ class Effects:
         return bool(self.vulnerabilities)
 
     @property
-    def active(self):
+    def has_active_effects(self):
         return len(self._effects) > 0
 
-    
+    @property
+    def active_effects(self) -> list[Effect]:
+        return list(set(self._effects))
+
     #################
     # ~~ Getters ~~ #
     #################
@@ -225,13 +245,15 @@ class Effects:
     def get_all_category_name(self, *categories: str) -> list[Effect]:
         'return a list of effects in the collection that have all the specified categories'
         return list(filter(
-            lambda e: all(category.lower() in e.category for category in categories), 
+            lambda e: all(category.lower()
+                          in e.category for category in categories),
             self._effects))
 
     def get_any_category_name(self, *categories: str) -> list[Effect]:
         'return a list of effects in the collection that have the specified category'
         return list(filter(
-            lambda e: any(category.lower() in e.category for category in categories), 
+            lambda e: any(category.lower()
+                          in e.category for category in categories),
             self._effects))
 
     def get_category_effects(self, category: str, ) -> 'Effects':
@@ -242,7 +264,6 @@ class Effects:
         'return a list of effects in the collection that have the specified text'
         return list(filter(lambda e: text.lower() in e.name.lower(), self._effects))
 
-    
     #####################################################
     # ~~ Effect type-specific getters and properties ~~ #
     #####################################################
@@ -253,9 +274,20 @@ class Effects:
                 for e in self._effects
                 if any(getattr(e, property) != 0
                        for property in [
-                        'take_bonus_damage_amount',
-                        'take_bonus_damage_percent']
-                        )]
+                    'take_bonus_damage_amount',
+                    'take_bonus_damage_percent']
+                )]
+
+    @property
+    def deal_damage_effects(self) -> list[Effect]:
+        'return a list of effects in the collection that cause bearer to deal extra damage'
+        return [e
+                for e in self._effects
+                if any(getattr(e, property) != 0
+                       for property in [
+                    'deal_bonus_damage_amount',
+                    'deal_bonus_damage_percent']
+                )]
 
     @property
     def damage_over_time(self, use=False) -> int:
@@ -332,7 +364,14 @@ class Effects:
     def get_max_health_effects(self) -> list[Effect]:
         return [effect for effect in self._effects if effect.bonus_max_health != 0]
 
-    
+    @property
+    def _marquis(self) -> str:
+        return " ".join([f"{effect.symbol}{self.count(effect):<2}"
+            for effect in sorted(
+                self.active_effects,
+                key=lambda e: _SORT_PRIORITY.get(e.name, 100))
+            ])
+
     ########################
     # ~~ Dunder methods ~~ #
     ########################
@@ -345,6 +384,9 @@ class Effects:
 
     def __iter__(self) -> Iterator[Effect]:
         return iter(self._effects)
-    
+
     def __getitem__(self, index: int) -> Effect:
         return self._effects[index]
+
+    def __len__(self) -> int:
+        return len(self._effects)

@@ -1,7 +1,7 @@
 from dungeoncrawl.entities.effects import Effects
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.utilities.location import Point, distance_between
-from dungeoncrawl.characters import Party
+from dungeoncrawl.entities.characters import Party
 
 
 import functools

@@ -15,6 +15,8 @@ class Gear:
     description: str = field(init=True, default="", repr=True, hash=False)
 
     damage: int = field(init=True, default=0, hash=False)
+    damage_type: str = field(init=True, default="physical", hash=False)
+    
     bonus_damage_output_percent: float = field(
         init=True, default=0, hash=False)
 

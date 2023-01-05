@@ -1,5 +1,14 @@
 from dungeoncrawl.entities.equipment import Gear, GearSet
 
+class Shield(Gear):
+    def __init__(self) -> None:
+        super().__init__(
+            category="offhand",
+            name="Shield",
+            description="A sturdy shield.",
+            damage_reduction_percent=0.05,
+        )
+
 class ClothArmor(GearSet):
     def __init__(self) -> None:
         super().__init__(

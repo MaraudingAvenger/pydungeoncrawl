@@ -5,7 +5,7 @@ from dungeoncrawl.board import Board
 from dungeoncrawl.debuffs import Embarassed
 from dungeoncrawl.entities.monster import Monster
 from dungeoncrawl.entities.pawn import Pawn, _action_decorator
-from dungeoncrawl.characters import Party
+from dungeoncrawl.entities.characters import Party
 from dungeoncrawl.utilities.location import Point, distance_between
 
 class Boss(Monster, abc.ABC):
@@ -115,8 +115,16 @@ class DummyBoss(Boss):
             if path is not None:
                 self.move(path[0])
         else:
-            self.attack(target)
+            if self.is_on_cooldown("Attack"):
+                self.aoe(party)
+            else:
+                self.attack(target)
 
     @_action_decorator(cooldown=2, melee=True) # type: ignore
     def attack(self, target: Pawn):
-        target._take_damage(self, 10, "physical")
+        target._take_damage(self, 20, "physical")
+
+    @_action_decorator(cooldown=10) # type: ignore
+    def aoe(self, party: Party):
+        for pawn in party.members:
+            pawn._take_damage(self, 50, "physical")

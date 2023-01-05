@@ -1,6 +1,8 @@
+import math
 from dataclasses import dataclass, field
 from functools import singledispatchmethod, wraps
 from typing import Any, Literal
+from dungeoncrawl.armor import ClothArmor
 from dungeoncrawl.debuffs import MagicVulnerability
 
 from dungeoncrawl.entities.equipment import Gear, GearSet
@@ -46,7 +48,7 @@ def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, aff
     def actual_decorator(func):
         @wraps(func)
         def wrapper(self: 'Pawn', *args, **kwargs):
-            target: Pawn = kwargs.get('target', args[0])
+            target: Pawn = kwargs.get('target', self)
 
             reason = ''
             if self._is_dead:
@@ -105,7 +107,8 @@ class Pawn(_Character):
                  name,
                  position: Point | tuple[int, int],
                  health_max: int,
-                 symbol: str = '@') -> None:
+                 symbol: str = '@',
+                 gear: GearSet = ClothArmor()) -> None:
 
         self.name = name
 
@@ -124,6 +127,7 @@ class Pawn(_Character):
 
         # effects
         self.equipment = Equipment()
+        self.equipment.equip(gear)
         self.effects = Effects()
 
         # internal use
@@ -195,14 +199,10 @@ class Pawn(_Character):
         return [name for name, cooldown in self.ability_cooldowns.items() if cooldown > 0]
 
     def is_on_cooldown(self, ability_name: str) -> bool:
-        return self.ability_cooldowns.get(ability_name, 0) > 0
+        return self.ability_cooldowns.get(clean_name(ability_name), 0) > 0
 
     def cooldown(self, ability_name: str) -> int:
-        return self.ability_cooldowns.get(ability_name, 0)
-
-    @property
-    def has_effects(self) -> bool:
-        return self.effects.active
+        return self.ability_cooldowns.get(clean_name(ability_name), 0)
 
     @property
     def health(self):
@@ -358,7 +358,17 @@ class Pawn(_Character):
 
     @property
     def _base_damage(self) -> int:
-        return self.equipment.bonus_damage_output + int(round(self.equipment.bonus_damage_output * self.equipment.bonus_damage_output_percent))
+        return self.equipment.bonus_damage_output + int(round(self.equipment.bonus_damage_output * self.equipment.bonus_damage_output_percent)) + sum([e.deal_bonus_damage_amount for e in self.effects.deal_damage_effects])
+
+    @property
+    def _damage_multiplier(self) -> float:
+        return sum([e.deal_bonus_damage_percent for e in self.effects.deal_damage_effects])
+
+    def calculate_damage(self, damage, target) -> int:
+        dmg = damage + self._base_damage
+        for effect in self.effects.deal_damage_effects:
+            effect.on_activate(user=self, total_damage=dmg, target=target)
+        return dmg + math.ceil(dmg * self._damage_multiplier)
 
     def _tick_damage(self, effect: Effect) -> None:
         self.health -= effect.damage_over_time
@@ -371,6 +381,15 @@ class Pawn(_Character):
 
     def _take_damage(self, damager: 'Pawn', damage: int, damage_type: str) -> None:
         #print(self.__class__.__name__, 'took damage!')
+
+
+        for effect in self.effects.get_any_category_name('damage_activate'):
+            print(f"triggering {effect.name}")
+            effect.on_activate(
+                damager=damager,
+                total_damage=damage,
+                damage_type=damage_type
+            )
 
         if damager is not None:
             # trigger reflect
@@ -398,6 +417,7 @@ class Pawn(_Character):
             effect.on_activate(
                 damager = damager,
                 total_damage = damage,
+                damage_type = damage_type,
                 calculated_damage = number_damage + percent_damage)
 
             damage += (number_damage + percent_damage)
@@ -435,6 +455,8 @@ class Pawn(_Character):
     ###############################
     # ~~~ Convenience Methods ~~~ #
     ###############################
+    def has_effect(self, effect: Effect) -> bool:
+        return self.effects.count(effect) > 0
 
     def equip(self, item: Gear | GearSet) -> None:
         return self.equipment.equip(item)
@@ -459,8 +481,8 @@ class Pawn(_Character):
         return self.effects.blinded
 
     @property
-    def active_effects(self):
-        return self.effects.active
+    def active_effects(self) -> list[str]:
+        return [e.name for e in self.effects.active_effects]
 
     @property
     def vulnerable(self):
@@ -525,6 +547,18 @@ class Pawn(_Character):
     def _(self, effect_name: str) -> int:
         'return the number of stacks of the specified effect in the collection'
         return self.effects.count(effect_name)
+
+    @property
+    def _marquis(self) -> str:
+        # | ❤️❤️❤️❤️❤️❤️🖤🖤🖤 | 🦶 | Balls McPherson        | 💚2, 💪4, 👀
+        
+        #health = '❤️' * math.ceil((self.health / self.health_max) * 10)
+        
+        #empty_health = '🖤' * (10 - len(health)//2)
+        action = '🦶' if self.moved_this_turn else '👊'
+        
+        return f"| {self.health} / {self.health_max} | {action} | {self.name:<20} | {self.effects._marquis:<40}"
+        
 
     ##########################
     # ~~~ Dunder Methods ~~~ #

@@ -1,12 +1,12 @@
+from dungeoncrawl.entities.equipment import GearSet
 from dungeoncrawl.entities.pawn import Pawn, Action, _action_decorator
 from dungeoncrawl.entities.effects import Effect
 from dungeoncrawl.utilities.location import Point
 from dungeoncrawl.armor import ClothArmor
 
-
 class Character(Pawn):
-    def __init__(self, name: str, symbol: str, role: str, position: Point | tuple[int, int] = Point(0, 0), health_max: int = 100) -> None:
-        super().__init__(name, position, health_max, symbol)
+    def __init__(self, name: str, symbol: str, role: str, position: Point | tuple[int, int] = Point(0, 0), health_max: int = 100, gear: GearSet = ClothArmor()) -> None:
+        super().__init__(name, position, health_max, symbol, gear=gear)
         self.name = name
         self.role = role
         self.ability_cooldowns: dict[str, int] = {}
@@ -27,7 +27,6 @@ class Character(Pawn):
 
     def __str__(self):
         return f"Character({self.name}, {self.position}, {self.health}/{self.health_max}, {self._symbol})"
-
 
 class Party:
     def __init__(self, *members: Character) -> None:
@@ -51,6 +50,8 @@ class Party:
         if len((walrus := list(filter(lambda x: x.role.lower() == 'dps', members)))) != 2:
             raise ValueError("Party must have at least two dps")
         self._dps = tuple(walrus)
+        self.name = "The party"
+        self.position = Point(0, 0)
 
     def _tick(self):
         for member in self.members:
@@ -86,6 +87,10 @@ class Party:
     def is_dead(self) -> bool:
         return not self.is_alive
 
+    @property
+    def _marquis(self):
+        return "\n".join(member._marquis for member in self.members)
+
     def __repr__(self):
         return f"Party({self.members})"
 
@@ -100,7 +105,6 @@ class Party:
                 for member in self.members
                 if member.name.lower() == key.lower()
                 or key.lower() in member.__class__.__name__.lower()][0]
-
 
 
 class DummyHero(Character):

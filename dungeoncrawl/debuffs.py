@@ -71,6 +71,24 @@ class Embarassed(Effect):
         return random.choice(insults)
 
 
+class Poison(Effect):
+    def __init__(self, target, duration:int=3, dot_amount:int=3) -> None:
+        self._dot_amount = dot_amount
+        self.target = target
+        super().__init__(name="Poison", duration=duration,
+                         category={'dot', 'poison', 'debuff', 'damage', 'damage over time'}, symbol='🐍')
+        
+    @property
+    def damage_over_time(self) -> int:
+        if self.target.poisoned:
+            return self._dot_amount * 2
+        return self._dot_amount
+    
+    @damage_over_time.setter
+    def damage_over_time(self, value) -> None:
+        self._dot_amount = value
+
+
 class Stun(Effect):
     def __init__(self, duration) -> None:
         super().__init__(name="Stun", duration=duration,
@@ -113,6 +131,11 @@ class MagicVulnerability(Effect):
             'magic', 'magic vulnerability', 'debuff', 'vulnerable'}, take_bonus_damage_percent=.10, symbol='🤩')
 
 
+class DoT(Effect):
+    def __init__(self, target, name: str, duration:int=3, dot_amount:int=3) -> None:
+        super().__init__(name=name, duration=duration, damage_over_time=dot_amount,
+                         category={'dot', 'debuff', 'damage', 'damage over time'}, symbol='🩸')
+
 class FrostResistance(Effect):
     def __init__(self) -> None:
         super().__init__(name="Frost Resistance", duration=20, category={
@@ -123,3 +146,4 @@ class FireResistance(Effect):
     def __init__(self) -> None:
         super().__init__(name="Fire Resistance", duration=20, category={
             'resist', 'fire', 'fire resistance'}, take_bonus_damage_percent=-.10, symbol='🥵')
+

@@ -20,35 +20,42 @@ class _Character:
 # ~~~ Ability Decorators ~~~ #
 ##############################
 
-def _check_can_move(func):
-    @wraps(func)
-    def wrapper(self: 'Pawn', *args, **kwargs):
-        if not self.effects.rooted:
-            return func(self, *args, **kwargs)
+def _check_can_move(_func):
+    def actual_decorator(func):
+        @wraps(func)
+        def wrapper(self: 'Pawn', *args, **kwargs):
+            if not self.rooted or not self.stunned:
+                return func(self, *args, **kwargs)
 
-        reason = ''
-        if self.effects.rooted:
-            reason = f"{self.name} is rooted!"
-        if self.effects.stunned:
-            reason = f"{self.name} is stunned!"
-        self.action_history.append(
-            Action(
-                turn=self._turn,
-                type='move',
-                action_name=func.__name__,
-                actor=self,
-                target=kwargs.get('target', args[0]),
-                failed=True,
-                failed_reason=reason
+            reason = ''
+            if self.effects.rooted:
+                reason = f"{self.name} is rooted!"
+            if self.effects.stunned:
+                reason = f"{self.name} is stunned!"
+            self.action_history.append(
+                Action(
+                    turn=self._turn,
+                    type='move',
+                    action_name=func.__name__,
+                    actor=self,
+                    target=kwargs.get('target', args[0]),
+                    failed=True,
+                    failed_reason=reason
+                )
             )
-        )
-    return wrapper
+        
+        return wrapper
+    
+    if _func is None:
+        return actual_decorator
+    return actual_decorator(_func)
+    
 
 def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, affected_by_blind: bool = True, affected_by_root: bool = False):
     def actual_decorator(func):
         @wraps(func)
         def wrapper(self: 'Pawn', *args, **kwargs):
-            target: Pawn = kwargs.get('target', self)
+            target: Pawn = kwargs.get('target', args[0] if args else self)
 
             reason = ''
             if self._is_dead:
@@ -255,10 +262,27 @@ class Pawn(_Character):
     ####################
     # ~~~ Movement ~~~ #
     ####################
-    @_check_can_move
     def move(self, destination: Point) -> None:
         if not self._is_dead:
             return self.move_toward(destination)
+
+    @_check_can_move
+    def move_toward(self, target: Point|_Character) -> None:
+        if not self._is_dead:
+            if isinstance(target, _Character):
+                target = target.position
+
+            if self.distance_from(target) > 1.5:
+                path = bresenham(self.position, target)
+                self.position = next(path)
+                self.face(next(path))
+            else:
+                add = (target.x-self.position.x, target.y-self.position.y)
+                self.position = target
+                self.face(Point(
+                    target.x+(add[0]),
+                    target.y+(add[1])
+                ))
 
     @singledispatchmethod
     def _teleport(self, x: int, y: int) -> None:
@@ -333,23 +357,6 @@ class Pawn(_Character):
             self.position = Point(self.position.x-1, self.position.y+1)
             self.face(self.position.x-1, self.position.y+1)
 
-    @_check_can_move
-    def move_toward(self, target: Point|_Character) -> None:
-        if not self._is_dead:
-            if isinstance(target, _Character):
-                target = target.position
-
-            if self.distance_from(target) > 1.5:
-                path = bresenham(self.position, target)
-                self.position = next(path)
-                self.face(next(path))
-            else:
-                add = (target.x-self.position.x, target.y-self.position.y)
-                self.position = target
-                self.face(Point(
-                    target.x+(add[0]),
-                    target.y+(add[1])
-                ))
 
     
     ##################
@@ -382,6 +389,14 @@ class Pawn(_Character):
     def _take_damage(self, damager: 'Pawn', damage: int, damage_type: str) -> None:
         #print(self.__class__.__name__, 'took damage!')
 
+        barriers = self.effects.get_any_category_name('barrier')
+        if barriers:
+            barriers[0].on_activate(
+                damager=damager,
+                total_damage=damage,
+                damage_type=damage_type
+            )
+            return
 
         for effect in self.effects.get_any_category_name('damage_activate'):
             print(f"triggering {effect.name}")
@@ -552,12 +567,12 @@ class Pawn(_Character):
     def _marquis(self) -> str:
         # | ❤️❤️❤️❤️❤️❤️🖤🖤🖤 | 🦶 | Balls McPherson        | 💚2, 💪4, 👀
         
-        #health = '❤️' * math.ceil((self.health / self.health_max) * 10)
+        health = '❤️' * math.ceil((self.health / self.health_max) * 10)
         
-        #empty_health = '🖤' * (10 - len(health)//2)
+        empty_health = '🖤' * (10 - len(health)//2)
         action = '🦶' if self.moved_this_turn else '👊'
         
-        return f"| {self.health} / {self.health_max} | {action} | {self.name:<20} | {self.effects._marquis:<40}"
+        return f"| {health}{empty_health} | {action} | {self.symbol}:{self.name:<20} | {self.effects._marquis:<40}"
         
 
     ##########################

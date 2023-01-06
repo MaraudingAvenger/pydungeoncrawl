@@ -55,7 +55,7 @@ class Parry(Effect):
     def on_activate(self, *args, **kwargs) -> None:
         if kwargs.get("total_damage", 0) > 0:
             self.duration = 0
-            self.boss.effects.add(ExposeWeakness(duration=3), stacks=4)
+            self.boss.effects.add_stacks(ExposeWeakness, stacks=4, duration=3)
 
 class Might(Effect):
     def __init__(self, duration: int) -> None:
@@ -98,15 +98,14 @@ class ShieldStance(Effect):
     def __init__(self, user: Pawn) -> None:
         super().__init__(name="Shield Stance", duration=3, category={'physical', 'buff', 'shield stance', 'shield', 'defense', 'defensive', 'damage_activate'}, symbol='🔰')
         self.user = user
+        self.user.reports['shield stance'] = 0
 
     def on_activate(self, *args, **kwargs) -> None:
-        print("shield stance has been activated")
-        self.user.reports.setdefault('shield stance', 0)
         self.user.reports['shield stance'] += 1
 
     def on_expire(self) -> None:
-        times = min([15, self.user.reports.get('shield stance', 0) * 5])
-        self.user.effects.add(Toughness(duration=3), stacks=times)
+        times = self.user.reports.get('shield stance', 0) * 5
+        self.user.effects.add_stacks(Toughness, stacks=times, duration=3)
 
 class Inspiration(Effect):
     def __init__(self, party: Party) -> None:
@@ -114,9 +113,6 @@ class Inspiration(Effect):
         self.party = party
 
     def on_activate(self, *args, **kwargs) -> None:
-        print("inspiration has been activated")
-        self.party.tank.reports['butts'] = (args, kwargs)
         for member in self.party:
-            print(f"{member.name} is inspired for {kwargs.get('total_damage', 0)}!")
             member._heal(kwargs.get("total_damage", 0))
             member.effects.add(Toughness(5))

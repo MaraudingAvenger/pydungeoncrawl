@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from functools import singledispatchmethod
 from typing import Iterator
 import time
@@ -19,7 +18,6 @@ _SORT_PRIORITY = {
 }
 
 
-@dataclass
 class Effect:
     """
     A class that represents an effect.  
@@ -47,53 +45,55 @@ class Effect:
     effect is applied. A positive number will increase the Pawn's maximum hit points; a negative number
     will decrease the Pawn's hit points. The default value is zero.
     """
-    name: str = field(init=True, repr=True, hash=True)
-    duration: int | float = field(init=True, default=1, repr=True, hash=False)
-    category: set[str] = field(
-        init=True, default_factory=set, repr=True, hash=True)
-    description: str = field(init=True, default="", repr=True, hash=True)
-    new: bool = field(init=False, default=True, repr=False, hash=False)
-    symbol: str = field(init=True, default="⚙", repr=True, hash=True)
-    _stamp: float = field(
-        init=False, default_factory=time.time, repr=False, hash=True)
+    def __init__(self,
+                 name: str,
+                 duration: int | float = float("inf"),
+                 category: set[str] = set(),
+                 description: str = "",
+                 new: bool = True,
+                 symbol: str = "⚙",
+                 _stamp: float = time.time(),
+                 on_create=lambda *x, **y: None,
+                 on_expire=lambda *x, **y: None,
+                 on_tick=lambda *x, **y: None,
+                 on_activate=lambda *x, **y: None,
+                 bonus_movement: int = 0,
+                 heal_over_time: int = 0,
+                 bonus_max_health: int = 0,
+                 bonus_max_health_percent: float = 0,
+                 damage_over_time: int = 0,
+                 deal_bonus_damage_amount: int = 0,
+                 deal_bonus_damage_percent: float = 0,
+                 take_bonus_damage_amount: int = 0,
+                 take_bonus_damage_percent: float = 0,
+                 reflect_damage_amount: int = 0,
+                 reflect_damage_percent: float = 0):
+            
+        self.name=name
+        self.duration    = duration
+        self.category    = category
+        self.description = description
+        self.new         = new
+        self.symbol      = symbol
+        self._stamp      = _stamp
+        self.on_create   = on_create
+        self.on_expire   = on_expire
+        self.on_tick     = on_tick
+        self.on_activate = on_activate
+        self.bonus_movement: int = bonus_movement
+        self.heal_over_time: int = heal_over_time
+        self.bonus_max_health: int = bonus_max_health
+        self.bonus_max_health_percent: float = bonus_max_health_percent
+        self.damage_over_time: int = damage_over_time
+        self.deal_bonus_damage_amount: int = deal_bonus_damage_amount
+        self.deal_bonus_damage_percent: float = deal_bonus_damage_percent
+        self.take_bonus_damage_amount: int = take_bonus_damage_amount
+        self.take_bonus_damage_percent: float = take_bonus_damage_percent
+        self.reflect_damage_amount: int = reflect_damage_amount
+        self.reflect_damage_percent: float = reflect_damage_percent
 
-    # ~~~ Callbacks ~~~#
-    on_create = lambda *x, **y: None
-    on_expire = lambda *x, **y: None
-    on_tick = lambda *x, **y: None
-    on_activate = lambda *x, **y: None
-
-    # ~~~ Bonus effects ~~~#
-    # movement
-    bonus_movement: int = field(init=True, default=0, hash=False, repr=False)
-
-    # healing and max health buffing
-    heal_over_time: int = field(init=True, default=0, hash=False, repr=False)
-    bonus_max_health: int = field(init=True, default=0, hash=False, repr=False)
-    bonus_max_health_percent: float = field(
-        init=True, default=0, hash=False, repr=False)
-
-    # damage on tick
-    damage_over_time: int = field(init=True, default=0, hash=False, repr=False)
-
-    # damage when attacking
-    deal_bonus_damage_amount: int = field(
-        init=True, default=0, hash=False, repr=False)
-    deal_bonus_damage_percent: float = field(
-        init=True, default=0, hash=False, repr=False)
-
-    # damage when being attacked
-    # can be positive or negative
-    take_bonus_damage_amount: int = field(
-        init=True, default=0, hash=False, repr=False)
-    take_bonus_damage_percent: float = field(
-        init=True, default=0, hash=False, repr=False)
-
-    # triggered on _trigger_reflect, not otherwise
-    reflect_damage_amount: int = field(
-        init=True, default=0, hash=False, repr=False)
-    reflect_damage_percent: float = field(
-        init=True, default=0, hash=False, repr=False)
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.duration} turns)"
 
     def __str__(self):
         return self.symbol
@@ -145,16 +145,21 @@ class Effects:
         for effect in self.get_any_category_name('reflect'):
             target._take_damage(
                 damager,
-                int(round(damage * effect.reflect_damage_percent + effect.reflect_damage_amount)))
+                int(round(damage * effect.reflect_damage_percent + effect.reflect_damage_amount)),
+                damage_type='reflect')
 
     ########################################
     # ~~ Add, remove, and count effects ~~ #
     ########################################
 
-    def add(self, effect: Effect, stacks=1) -> None:
+    def add(self, effect: Effect) -> None:
         'add an effect to the collection'
+        self._effects.append(effect)
+
+    def add_stacks(self, effect_constructor, stacks=1, **kwargs) -> None:
+        'add a number of stacks of an effect to the collection'
         for _ in range(stacks):
-            self._effects.append(effect)
+            self.add(effect_constructor(**kwargs))
 
     def remove(self, effect: Effect) -> None:
         'remove an effect from the collection'

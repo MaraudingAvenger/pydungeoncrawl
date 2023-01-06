@@ -86,6 +86,11 @@ class TrainingDummy(Boss):
     def shout_at(self, target: Pawn):
         target._add_effect(Embarassed())
 
+    @_action_decorator(cooldown=3, melee=False, affected_by_blind=False) # type: ignore
+    def make_a_ruckus(self, party: Party):
+        for pawn in party.members:
+            self.shout_at(pawn)
+
     def _tick_logic(self, party: Party, board: Board):
         target = self.get_target(party)
         self.shout_at(target)
@@ -113,7 +118,7 @@ class DummyBoss(Boss):
         if distance_between(self.position, target.position) > 1.5:
             path = self._astar(board=board, start=self.position, goal=target.position)
             if path is not None:
-                self.move(path[0])
+                self.move_toward(path[0])
         else:
             if self.is_on_cooldown("Attack"):
                 self.aoe(party)

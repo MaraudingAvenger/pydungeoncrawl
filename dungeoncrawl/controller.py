@@ -47,7 +47,7 @@ class Level:
 
     @property
     def _marquis(self):
-        return f"{self.party._marquis}\n{'_'*80}\n{self.boss._marquis}"
+        return f"~~~~~~ TURN {self.turn_count:<4}~~~~~~\n{self.party._marquis}\n{'_'*80}\n{self.boss._marquis}"
 
     def __iter__(self):
         while self.party.is_alive and self.boss.is_alive:

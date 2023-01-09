@@ -1,13 +1,16 @@
 import math
+from collections import Counter
 from dataclasses import dataclass, field
 from functools import singledispatchmethod, wraps
 from typing import Any, Literal
+
 from dungeoncrawl.armor import ClothArmor
 from dungeoncrawl.debuffs import MagicVulnerability
 
 from dungeoncrawl.entities.equipment import Gear, GearSet
 from dungeoncrawl.entities.equipment import Equipment
 from dungeoncrawl.entities.effects import Effect, Effects
+
 from dungeoncrawl.utilities.location import Point, bresenham, clean_name, distance_between, behinds
 
 
@@ -20,36 +23,32 @@ class _Character:
 # ~~~ Ability Decorators ~~~ #
 ##############################
 
-def _check_can_move(_func):
-    def actual_decorator(func):
-        @wraps(func)
-        def wrapper(self: 'Pawn', *args, **kwargs):
-            if not self.rooted or not self.stunned:
-                return func(self, *args, **kwargs)
-
-            reason = ''
-            if self.effects.rooted:
-                reason = f"{self.name} is rooted!"
-            if self.effects.stunned:
-                reason = f"{self.name} is stunned!"
-            self.action_history.append(
-                Action(
-                    turn=self._turn,
-                    type='move',
-                    action_name=func.__name__,
-                    actor=self,
-                    target=kwargs.get('target', args[0]),
-                    failed=True,
-                    failed_reason=reason
-                )
-            )
+def _check_can_move(func):
+    @wraps(func)
+    def wrapper(self: 'Pawn', *args, **kwargs):
         
-        return wrapper
-    
-    if _func is None:
-        return actual_decorator
-    return actual_decorator(_func)
-    
+        if not self.rooted and not self.stunned:
+            return func(self, *args, **kwargs)
+
+        reason = ''
+        if self.effects.rooted:
+            reason = f"{self.name} is rooted!"
+        if self.effects.stunned:
+            reason = f"{self.name} is stunned!"
+        self.action_history.append(
+            Action(
+                turn=self._turn,
+                type='move',
+                action_name=func.__name__,
+                actor=self,
+                target=kwargs.get('target', args[0]),
+                failed=True,
+                failed_reason=reason
+            )
+        )
+
+    return wrapper
+
 
 def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, affected_by_blind: bool = True, affected_by_root: bool = False):
     def actual_decorator(func):
@@ -99,7 +98,8 @@ def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, aff
                 target=target
             )
             self.action_history.append(self.current_action)
-
+            if target != self:
+                self.face(target.position)
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -107,6 +107,7 @@ def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, aff
     if _func is None:
         return actual_decorator
     return actual_decorator(_func)
+
 
 class Pawn(_Character):
 
@@ -144,7 +145,7 @@ class Pawn(_Character):
         self._turn = 0
         self.acted_this_turn = False
         self.moved_this_turn = False
-        self.reports: dict[str,Any] = {}
+        self.reports: dict[str, Any] = {}
 
     ####################
     # ~~~ Location ~~~ #
@@ -202,13 +203,23 @@ class Pawn(_Character):
     ##################
 
     @property
-    def cooldowns(self) -> list[str]:
-        return [name for name, cooldown in self.ability_cooldowns.items() if cooldown > 0]
+    def cooldowns(self) -> dict[str,int]:
+        return {name : cooldown
+                for name, cooldown in self.ability_cooldowns.items()
+                if cooldown > 0}
 
     def is_on_cooldown(self, ability_name: str) -> bool:
+        '''
+        Checks the cooldowns for the name of an ability.
+        Returns True if the ability is on cooldown.
+        '''
         return self.ability_cooldowns.get(clean_name(ability_name), 0) > 0
 
-    def cooldown(self, ability_name: str) -> int:
+    def get_cooldown(self, ability_name: str) -> int:
+        '''
+        Get the cooldown for an ability.
+        Returns 0 if the ability is not on cooldown.
+        '''
         return self.ability_cooldowns.get(clean_name(ability_name), 0)
 
     @property
@@ -236,7 +247,10 @@ class Pawn(_Character):
     ########################
 
     @singledispatchmethod
-    def distance_to(self, other: _Character) -> float:
+    def distance_to(self, other: 'Pawn') -> float:
+        '''
+        Get the distance between this character and another character or a board square.
+        '''
         return distance_between(self.position, other.position)
 
     @distance_to.register
@@ -267,7 +281,8 @@ class Pawn(_Character):
             return self.move_toward(destination)
 
     @_check_can_move
-    def move_toward(self, target: Point|_Character) -> None:
+    def move_toward(self, target: Point | _Character) -> None:
+        "my bum is on the cheese"
         if not self._is_dead:
             if isinstance(target, _Character):
                 target = target.position
@@ -286,6 +301,7 @@ class Pawn(_Character):
 
     @singledispatchmethod
     def _teleport(self, x: int, y: int) -> None:
+        self.move_history.append(Point(x, y))
         if self.distance_from(x, y) > 1.5:
             self.position = Point(x, y)
             return
@@ -314,7 +330,7 @@ class Pawn(_Character):
         if not self._is_dead:
             self.position = Point(self.position.x, self.position.y+1)
             self.face(self.position.x, self.position.y+1)
-    
+
     @_check_can_move
     def move_left(self) -> None:
         if not self._is_dead:
@@ -357,8 +373,6 @@ class Pawn(_Character):
             self.position = Point(self.position.x-1, self.position.y+1)
             self.face(self.position.x-1, self.position.y+1)
 
-
-    
     ##################
     # ~~~ Combat ~~~ #
     ##################
@@ -378,18 +392,36 @@ class Pawn(_Character):
         return dmg + math.ceil(dmg * self._damage_multiplier)
 
     def _tick_damage(self, effect: Effect) -> None:
-        self.health -= effect.damage_over_time
-        self.health += effect.heal_over_time
-
+        if effect.damage_over_time > 0:
+            self.health -= effect.damage_over_time
+            self.action_history.append(Action(
+                turn=self._turn,
+                type='damage',
+                action_name=f'{effect.name} ticked for {effect.damage_over_time} damage',
+                actor=effect.name,
+                target=self.name,
+                ability_used=effect.name,
+                damage=effect.damage_over_time,
+            ))
+        
+        if effect.heal_over_time:
+            self._heal(effect.heal_over_time)
+            self.action_history.append(Action(
+                turn=self._turn,
+                type='damage',
+                action_name=f'{effect.name} healed for {effect.heal_over_time} health',
+                actor=effect.name,
+                target=self.name,
+                ability_used=effect.name,
+                damage=effect.heal_over_time,
+            ))
+        
         if self.health <= 0:
             self.health = 0
             self._is_dead = True
-    
 
     def _take_damage(self, damager: 'Pawn', damage: int, damage_type: str) -> None:
-        #print(self.__class__.__name__, 'took damage!')
-
-        barriers = self.effects.get_any_category_name('barrier')
+        barriers = self.effects.get_any_category_name('barrier') # cancels damage
         if barriers:
             barriers[0].on_activate(
                 damager=damager,
@@ -398,8 +430,16 @@ class Pawn(_Character):
             )
             return
 
-        for effect in self.effects.get_any_category_name('damage_activate'):
-            print(f"triggering {effect.name}")
+        parry = self.effects.get_any_category_name('parry') # cancels damage but needs to happen after barrier
+        if parry:
+            parry[0].on_activate(
+                damager=damager,
+                total_damage=damage,
+                damage_type=damage_type
+            )
+            return
+        
+        for effect in self.effects.get_any_category_name('damage_activate'): # only things that don't change the damage but react to it
             effect.on_activate(
                 damager=damager,
                 total_damage=damage,
@@ -415,7 +455,8 @@ class Pawn(_Character):
 
         # trigger vulnerabilities
         if damage_type == "magic":
-            increase = sum([effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'magic vuln')])
+            increase = sum(
+                [effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'magic vuln')])
             damage += int(round(increase * damage))
             self.effects.remove_name(f'magic vulnerabilty')
 
@@ -423,30 +464,33 @@ class Pawn(_Character):
             if self.effects.find_effect_text(f'poison vulnerability'):
                 damage *= 2
 
-
-        for effect in self.effects.get_extra_damage_effects():
-            number_damage = effect.take_bonus_damage_amount
-            percent_damage = int(round(effect.take_bonus_damage_percent * damage))
-            
-            # trigger the effect on_activate method just in case it has one
+        dam_reduce = sum([effect.take_bonus_damage_percent for effect in self.effects.get_any_category_name('modifier')]) # buff/debuffs that affect damage taken on self
+        damage += round(dam_reduce*damage)
+        for effect in self.effects.get_any_category_name('modifier'):
             effect.on_activate(
-                damager = damager,
-                total_damage = damage,
-                damage_type = damage_type,
-                calculated_damage = number_damage + percent_damage)
+                damager=damager,
+                total_damage=damage,
+                damage_type=damage_type
+            )
 
-            damage += (number_damage + percent_damage)
-
-            if damage == 0:
-                break
-        
-        # trigger resistances        
-        reduction = sum([effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'{damage_type} resist')])
-        damage -= int(round(reduction * damage))
+        # trigger resistances
+        resists = sum([effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'{damage_type} resist')])
+        damage -= int(round(resists * damage))
 
         # update action log with damage taken
         self.action_history.append(
-            Action(self._turn, "damage", f"{self.name} took {damage if damage >= 0 else 0} damage from {damager.name}!", damager, self, failed=False))
+            Action(
+                turn=self._turn,
+                type="damage",
+                action_name=f"{self.name} took {damage if damage >= 0 else 0} damage from {damager.name if isinstance(damager, Pawn) else 'the tile'}!",
+                actor=damager,
+                target=self,
+                failed=False,
+                damage=damage,
+                ability_used=damager.current_action.action_name if isinstance(damager, Pawn) else 'Tile', #type: ignore
+                actor_effects=damager.effects.to_dict() if isinstance(damager, Pawn) else None,
+                target_effects=self.effects.to_dict()
+            ))
 
         if damage > 0:
             self.health -= damage
@@ -466,11 +510,25 @@ class Pawn(_Character):
             if force and self.health > 0:
                 self._is_dead = False
 
+    def damage_report(self) -> list[dict[str, Any]]:
+        dr = []
+        for action in self.action_history:
+            if action.damage is not None:
+                dr.append(
+                    {'turn':action.turn,
+                    'damage':action.damage,
+                    'ability':action.ability_used,
+                    'source':action.actor,
+                    'damager_effects':action.actor_effects,
+                    'target_effects':action.target_effects}
+                )
+        return dr
 
     ###############################
-    # ~~~ Convenience Methods ~~~ #
+    # ~~~ Passthrough Methods ~~~ #
     ###############################
-    def has_effect(self, effect: Effect) -> bool:
+
+    def has_effect(self, effect: str | Effect) -> bool:
         return self.effects.count(effect) > 0
 
     def equip(self, item: Gear | GearSet) -> None:
@@ -480,19 +538,19 @@ class Pawn(_Character):
         return self.equipment.unequip(item)
 
     @property
-    def poisoned(self):
+    def poisoned(self) -> bool:
         return self.effects.poisoned
 
     @property
-    def rooted(self):
+    def rooted(self) -> bool:
         return self.effects.rooted
 
     @property
-    def stunned(self):
+    def stunned(self) -> bool:
         return self.effects.stunned
 
     @property
-    def blinded(self):
+    def blinded(self) -> bool:
         return self.effects.blinded
 
     @property
@@ -500,20 +558,27 @@ class Pawn(_Character):
         return [e.name for e in self.effects.active_effects]
 
     @property
-    def vulnerable(self):
+    def vulnerable(self) -> bool:
         return self.effects.vulnerable
 
     @property
-    def vulnerabilities(self):
+    def vulnerabilities(self) -> list[Effect]:
         return self.effects.vulnerabilities
 
     def vulnerable_to(self, damage_type: str):
+        """
+        Returns True if the pawn is vulnerable to the given damage type.
+
+        e.g. 
+        `pawn.vulnerable_to('magic')` -> `True`
+        """
         return self.effects.vulnerable_to(damage_type)
 
     #############################
     # ~~~ Effect Management ~~~ #
     #############################
 
+    # TODO: THIS IS A DUPE I THINK
     def _add_effect(self, effect: Effect) -> None:
         self.effects.add(effect)
 
@@ -525,8 +590,8 @@ class Pawn(_Character):
                 effect.new = False
             effect.on_tick()
             self._tick_damage(effect)
-        
-        #TODO: magic vulnerability from fire + frost vuln pair
+
+        # TODO: magic vulnerability from fire + frost vuln pair
         frost = self.effects.find_effect_text('frost vulnerability')
         fire = self.effects.find_effect_text('fire vulnerability')
         if frost and fire:
@@ -534,10 +599,15 @@ class Pawn(_Character):
                 self.effects.add(MagicVulnerability())
                 self.effects.remove_one(ice_effect)
                 self.effects.remove_one(fire_effect)
-        
+
         # tick self.effects
         self.effects._tick()  # updates durations and removes expired effects
 
+
+        # increment turn counter
+        self._turn += 1
+
+    def _post_tick(self) -> None:
         # decrement ability cooldowns
         if self.ability_cooldowns:
             for name, cooldown in self.ability_cooldowns.items():
@@ -550,30 +620,25 @@ class Pawn(_Character):
         self._was_hit = False
         self.current_action = None
 
-        # increment turn counter
-        self._turn += 1
+    def stacks(self, effect: str | Effect) -> int:
+        '''
+        Return the number of stacks of the specified effect that are currently active on the player.
 
-    @singledispatchmethod
-    def stacks(self, effect: Effect) -> int:
-        'return the number of stacks of the specified effect in the collection'
+        e.g. stacks('poison') -> 2
+        or   stacks(Poison()) -> 2
+        '''
         return self.effects.count(effect)
-
-    @stacks.register
-    def _(self, effect_name: str) -> int:
-        'return the number of stacks of the specified effect in the collection'
-        return self.effects.count(effect_name)
 
     @property
     def _marquis(self) -> str:
-        # | ❤️❤️❤️❤️❤️❤️🖤🖤🖤 | 🦶 | Balls McPherson        | 💚2, 💪4, 👀
-        
+        # | ❤️❤️❤️❤️❤️❤️🖤🖤🖤 | 🦶 | Oingo Boingo     | 💚2, 💪4, 👀
+
         health = '❤️' * math.ceil((self.health / self.health_max) * 10)
-        
+
         empty_health = '🖤' * (10 - len(health)//2)
         action = '🦶' if self.moved_this_turn else '👊'
-        
+
         return f"| {health}{empty_health} | {action} | {self.symbol}:{self.name:<20} | {self.effects._marquis:<40}"
-        
 
     ##########################
     # ~~~ Dunder Methods ~~~ #
@@ -595,6 +660,10 @@ class Action:
     target: Pawn | None | Point | str
     failed: bool = field(default=False, init=True)
     failed_reason: str = field(default='', init=True)
+    ability_used: str | None = field(default=None, init=True)
+    damage: int | None = field(default=None, init=True)
+    actor_effects: Counter | None = field(default=None, init=True)
+    target_effects: Counter | None = field(default=None, init=True)
 
     def __post_init__(self):
         self.action_name = clean_name(self.action_name)
@@ -604,6 +673,9 @@ class Action:
             self.target = f"{self.target.name} the {clean_name(self.target.__class__.__name__)}"
 
     def __repr__(self):
+        if self.type == "damage":
+            return self.action_name
+
         message = f"Turn {self.turn}: {self.actor} "
 
         # if it's an ability or a move
@@ -638,33 +710,3 @@ class Action:
     def __str__(self):
         return self.__repr__()
 
-
-
-if __name__ == '__main__':
-    import random
-
-    a = Pawn('a', Point(random.randint(0, 10), random.randint(0, 10)), 100)
-    b = Pawn('b', Point(random.randint(0, 10), random.randint(0, 10)), 100)
-    # testing creation
-    print("\nPawns:")
-    print(f"a: {a.name} at {a.position}")
-    print(f"b: {b.name} at {b.position}")
-
-    # testing measurements
-    print("\nCalculations:")
-    print(f"distance from a -> b: ", a.distance_to(b))
-    print(f"distance from a -> (2, 2): ", a.distance_to(2, 2))
-
-    # testing movement
-    print("\nMovement:")
-    print(f"moving a to (2, 2)")
-    a._teleport(Point(2, 2))
-    print(f"a: {a.name} at {a.position}, facing {a.facing_direction}")
-    print(f"moving a to (3, 3)")
-    a._teleport(3, 3)
-    print(f"moving down")
-    a.move_down()
-    print(f"a: {a.name} at {a.position}, facing {a.facing_direction}")
-    print("moving left")
-    a.move_left()
-    print(f"a: {a.name} at {a.position}, facing {a.facing_direction}")

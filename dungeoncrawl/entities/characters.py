@@ -57,6 +57,10 @@ class Party:
         for member in self.members:
             member._tick()
 
+    def _post_tick(self):
+        for member in self.members:
+            member._post_tick()
+
     def _add_effect(self, effect: Effect):
         for member in self.members:
             member.effects.add(effect)

@@ -60,6 +60,16 @@ class Staff(Gear):
             damage_type="physical",
         )
 
+class Wand(Gear):
+    def __init__(self) -> None:
+        super().__init__(
+            category="weapon",
+            name="Wand",
+            description="A magical wand.",
+            damage=2,
+            damage_type="magical",
+        )
+
 class ShortBow(Gear):
     def __init__(self) -> None:
         super().__init__(
@@ -76,7 +86,7 @@ class Claymore(Gear):
             category="weapon",
             name="Claymore",
             description="A large, two-handed sword.",
-            damage=8,
+            damage=10,
             damage_type="physical",
         )
 

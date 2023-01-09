@@ -2,7 +2,7 @@ import json
 from os import PathLike
 from typing import Any
 
-from dungeoncrawl.board import Square, Board
+from dungeoncrawl.entities.board import Square, Board
 from dungeoncrawl.utilities.location import Point
 
 # {

@@ -1,6 +1,7 @@
 
 import random
 from dungeoncrawl.entities.effects import Effect
+from dungeoncrawl.utilities.location import bresenham
 
 #############################
 # ~~ Training Dummy Debuff ~~#
@@ -12,7 +13,7 @@ class Embarassed(Effect):
         super().__init__(
             name="Embarassed",
             duration=3,
-            category={'embarassed', 'debuff', 'spirit', 'spiritual'},
+            category={'embarassed', 'debuff', 'spirit', 'spiritual', 'mental', 'curable'},
             description=f'The training dummy shouted, "{self.get_random_insult()}"',
             symbol='✨')
 
@@ -76,7 +77,7 @@ class Poison(Effect):
         self._dot_amount = dot_amount
         self.target = target
         super().__init__(name="Poison", duration=duration,
-                         category={'dot', 'poison', 'debuff', 'damage', 'damage over time'}, symbol='🐍')
+                         category={'dot', 'poison', 'debuff', 'damage', 'damage over time', 'curable'}, symbol='🐍')
         
     @property
     def damage_over_time(self) -> int:
@@ -92,19 +93,19 @@ class Poison(Effect):
 class Stun(Effect):
     def __init__(self, duration) -> None:
         super().__init__(name="Stun", duration=duration,
-                         category={'stun', 'debuff', 'debilitating', 'physical'}, symbol='💫')
+                         category={'stun', 'debuff', 'debilitating', 'physical', 'curable'}, symbol='💫')
 
 
 class Root(Effect):
     def __init__(self, duration) -> None:
         super().__init__(name="Root", duration=duration,
-                         category={'root', 'slow', 'debilitating', 'debuff'}, symbol='🐌')
+                         category={'root', 'slow', 'debilitating', 'debuff', 'curable'}, symbol='🐌')
 
 
 class Blind(Effect):
     def __init__(self, duration) -> None:
         super().__init__(name="Blind", duration=duration,
-                         category={'blind', 'debilitating', 'debuff'}, symbol='👀')
+                         category={'blind', 'debilitating', 'debuff', 'curable'}, symbol='👀')
 
 
 class Frailty(Effect):
@@ -116,30 +117,81 @@ class Frailty(Effect):
 class ExposeWeakness(Effect):
     def __init__(self, duration) -> None:
         super().__init__(name="Expose Weakness", duration=duration, take_bonus_damage_percent=.05,
-                         category={'expose weakness', 'physical', 'debuff'}, symbol='🥴')
+                         category={'expose weakness', 'physical', 'debuff', 'modifier'}, symbol='🥴')
 
 
 class PoisonVulnerability(Effect):
     def __init__(self, duration) -> None:
         super().__init__(name="Poison Vulnerability", duration=duration,
-                         category={'poison', 'vulnerable', 'debuff'}, symbol='🤢')
+                         category={'poison', 'vulnerable', 'debuff', 'curable'}, symbol='🤢')
 
 
 class MagicVulnerability(Effect):
     def __init__(self) -> None:
         super().__init__(name="Magic Vulnerability", duration=10, category={
-            'magic', 'magic vulnerability', 'debuff', 'vulnerable'}, take_bonus_damage_percent=.10, symbol='🤩')
+            'magic', 'magic vulnerability', 'debuff', 'vulnerable', 'curable'}, take_bonus_damage_percent=.10, symbol='🤩')
 
 
 class DoT(Effect):
     def __init__(self, target, name: str, duration:int=3, dot_amount:int=3) -> None:
         super().__init__(name=name, duration=duration, damage_over_time=dot_amount,
-                         category={'dot', 'debuff', 'damage', 'damage over time'}, symbol='🩸')
+                         category={'dot', 'debuff', 'damage', 'damage over time', 'curable'}, symbol='🩸')
+
+
+class Doom(Effect):
+    def __init__(self, caster, target, damage: int) -> None:
+        self.caster = caster
+        self.base_damage = damage
+        self.multiplier = 1
+        self.triggered = 0
+        super().__init__(name="Doom", description="Your doom is near", duration=15, category={'doom', 'curable'}, symbol='☠️')
+        self.target=target
+    
+    def increase_doom(self):
+        self.triggered += 1
+        
+        for _ in self.target.effects.get_any_category_name('debuff'):
+            self.multiplier += 0.05
+        self.target.effects.remove_category('debuff')
+
+        self.base_damage *= self.multiplier
+        self.duration = 15
+
+        if self.triggered >= 6:
+            self.duration = 0
+
+    def on_expire(self):
+        self.target._take_damage(self.caster, int(self.base_damage), 'spirit')
+
+class ShadeOfDeath(Effect):
+    def __init__(self, caster, target, damage:int=0) -> None:
+        self.position = caster.position
+        self.damage_total = damage
+        self.target = target
+        self.caster = caster
+        super().__init__( name='Shade of Death', category={'debuff', 'damage'}, symbol='👻')
+        self.duration = len(list(bresenham(self.position, target.position)))
+
+    @property
+    def duration(self) -> int:
+        return self._duration
+
+    @duration.setter
+    def duration(self, _) -> None:
+        path = list(bresenham(self.position, self.target.position))
+        self._duration = len(path)
+        self.position = path[0] if path else self.position
+
+    def on_expire(self):
+        self.target._take_damage(self.caster, self.damage_total, 'spirit')
+        self.target.effects.add_stacks(ExposeWeakness, stacks=10, duration=5)
+        self.target.effects.add_stacks(MagicVulnerability, stacks=10)
+        self.target.effects.add_stacks(Frailty, stacks=10, duration=5)
 
 class FrostResistance(Effect):
     def __init__(self) -> None:
         super().__init__(name="Frost Resistance", duration=20, category={
-            'resist', 'frost', 'frost resistance'}, take_bonus_damage_percent=-.10, symbol='🥶')
+            'resist', 'ice', 'frost', 'frost resistance'}, take_bonus_damage_percent=-.10, symbol='🥶')
 
 
 class FireResistance(Effect):

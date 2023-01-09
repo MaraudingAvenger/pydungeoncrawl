@@ -10,9 +10,9 @@ class Loot(Protocol):
 
 @dataclass
 class Gear:
-    name: str = field(init=True, repr=True, hash=True)
-    category: str = field(init=True, repr=True, hash=True)
-    description: str = field(init=True, default="", repr=True, hash=False)
+    name: str = field(init=True, hash=True)
+    category: str = field(init=True, hash=True)
+    description: str = field(init=True, default="", hash=False)
 
     damage: int = field(init=True, default=0, hash=False)
     damage_type: str = field(init=True, default="physical", hash=False)
@@ -27,6 +27,10 @@ class Gear:
     bonus_max_health: int = field(init=True, default=0, hash=False)
     bonus_max_health_percent: float = field(init=True, default=0, hash=False)
 
+    def __repr__(self) -> str:
+        if self.damage:
+            return f"{self.name} ({self.category}, {self.damage} damage)"
+        return f"{self.name} ({self.category}, {self.damage_reduction_percent:.0%} protection)"
 
 class Empty(Gear):
     def __init__(self, category) -> None:

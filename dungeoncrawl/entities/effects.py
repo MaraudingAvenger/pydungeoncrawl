@@ -1,7 +1,7 @@
-from functools import singledispatchmethod
-from typing import Iterator
 import time
 import hashlib
+from collections import Counter
+from typing import Iterator
 
 _SORT_PRIORITY = {
     "Might": 1,
@@ -45,18 +45,15 @@ class Effect:
     effect is applied. A positive number will increase the Pawn's maximum hit points; a negative number
     will decrease the Pawn's hit points. The default value is zero.
     """
+
     def __init__(self,
                  name: str,
+                 category: set[str] | None = None,
                  duration: int | float = float("inf"),
-                 category: set[str] = set(),
                  description: str = "",
                  new: bool = True,
                  symbol: str = "⚙",
                  _stamp: float = time.time(),
-                 on_create=lambda *x, **y: None,
-                 on_expire=lambda *x, **y: None,
-                 on_tick=lambda *x, **y: None,
-                 on_activate=lambda *x, **y: None,
                  bonus_movement: int = 0,
                  heal_over_time: int = 0,
                  bonus_max_health: int = 0,
@@ -68,18 +65,14 @@ class Effect:
                  take_bonus_damage_percent: float = 0,
                  reflect_damage_amount: int = 0,
                  reflect_damage_percent: float = 0):
-            
-        self.name=name
-        self.duration    = duration
-        self.category    = category
+
+        self.name = name
+        self.duration = duration
+        self.category = category or set()
         self.description = description
-        self.new         = new
-        self.symbol      = symbol
-        self._stamp      = _stamp
-        self.on_create   = on_create
-        self.on_expire   = on_expire
-        self.on_tick     = on_tick
-        self.on_activate = on_activate
+        self.new = new
+        self.symbol = symbol
+        self._stamp = _stamp
         self.bonus_movement: int = bonus_movement
         self.heal_over_time: int = heal_over_time
         self.bonus_max_health: int = bonus_max_health
@@ -92,8 +85,20 @@ class Effect:
         self.reflect_damage_amount: int = reflect_damage_amount
         self.reflect_damage_percent: float = reflect_damage_percent
 
+    def on_create(self, *args, **kwargs):
+        ...
+    
+    def on_expire(self, *args, **kwargs):
+        ...
+    
+    def on_tick(self, *args, **kwargs):
+        ...
+
+    def on_activate(self, *args, **kwargs):
+        ...
+
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.duration} turns)"
+        return f"{self.__class__.__name__}({self.duration} turn{'s' if self.duration != 1 else ''})"
 
     def __str__(self):
         return self.symbol
@@ -101,12 +106,12 @@ class Effect:
     def __eq__(self, other):
         if not isinstance(other, Effect):
             raise NotImplemented("Cannot compare Effect to non-Effect object")
-        return self.__hash__() == other.__hash__()
+        return self.__hash__() == other.__hash__() 
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return int.from_bytes(hashlib.md5(''.join((
-                self.name, ''.join(self.category), self.description, self.symbol
-            )).encode()).digest())
+            self.name, ''.join(self.category), self.description, self.symbol
+        )).encode()).digest())
 
 
 class Effects:
@@ -145,7 +150,8 @@ class Effects:
         for effect in self.get_any_category_name('reflect'):
             target._take_damage(
                 damager,
-                int(round(damage * effect.reflect_damage_percent + effect.reflect_damage_amount)),
+                int(round(damage * effect.reflect_damage_percent +
+                    effect.reflect_damage_amount)),
                 damage_type='reflect')
 
     ########################################
@@ -153,7 +159,7 @@ class Effects:
     ########################################
 
     def add(self, effect: Effect) -> None:
-        'add an effect to the collection'
+        'add a single effect to the collection'
         self._effects.append(effect)
 
     def add_stacks(self, effect_constructor, stacks=1, **kwargs) -> None:
@@ -186,15 +192,11 @@ class Effects:
         'remove one effect from the collection'
         self._effects.pop(self._effects.index(effect))
 
-    @singledispatchmethod
-    def count(self, effect: Effect) -> int:
+    def count(self, effect: str | Effect) -> int:
         'return the number of effects in the collection'
-        return len(list(filter(lambda e: e.name == effect.name, self._effects)))
-
-    @count.register
-    def _(self, effect_name: str) -> int:
-        'return the number of effects in the collection'
-        return len(list(filter(lambda e: e.name.lower() == effect_name.lower(), self._effects)))
+        if isinstance(effect, Effect):
+            return len(list(filter(lambda e: e.name == effect.name, self._effects)))
+        return len(list(filter(lambda e: e.name.lower() == effect.lower(), self._effects)))
 
     #############################################
     # ~~~ Convenience properties and methods ~~~#
@@ -268,6 +270,10 @@ class Effects:
     def find_effect_text(self, text: str) -> list[Effect]:
         'return a list of effects in the collection that have the specified text'
         return list(filter(lambda e: text.lower() in e.name.lower(), self._effects))
+
+    def find_effect_exact_text(self, text: str) -> Effect | None:
+        'return an effect in the collection that has the specified text'
+        return next(filter(lambda e: text.lower() == e.name.lower(), self._effects), None)
 
     #####################################################
     # ~~ Effect type-specific getters and properties ~~ #
@@ -372,14 +378,17 @@ class Effects:
     @property
     def _marquis(self) -> str:
         return " ".join([f"{effect.symbol}{self.count(effect):<2}"
-            for effect in sorted(
-                self.active_effects,
-                key=lambda e: _SORT_PRIORITY.get(e.name, 100))
-            ])
+                         for effect in sorted(
+                             self.active_effects,
+                             key=lambda e: _SORT_PRIORITY.get(e.name, 100))
+                         ])
 
     ########################
     # ~~ Dunder methods ~~ #
     ########################
+
+    def to_dict(self):
+        return Counter(e.name for e in self._effects)
 
     def __repr__(self) -> str:
         return f'Effects({self._effects})'

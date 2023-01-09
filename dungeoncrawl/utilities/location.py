@@ -1,8 +1,7 @@
-import heapq
 import math
+import re
 from dataclasses import dataclass
 from functools import singledispatch
-import re
 from typing import Generator
 
 def clean_name(name):
@@ -106,3 +105,13 @@ def bresenham(origin: Point, destination: Point) -> Generator[Point, None, None]
             err = err + dx
             y1 = y1 + sy
         yield Point(x1, y1)
+
+def get_adjacent_points(position: Point | tuple[int,int]) -> list[Point]:
+    "get a list of adjacent points to a given point"
+    if isinstance(position, tuple):
+        position = Point(*position)
+    return list(filter(None,
+            [Point(position.x + x, position.y + y)
+            for x in [-1, 0, 1]
+            for y in [-1, 0, 1]
+            if not (x == y == 0)]))

@@ -1,11 +1,15 @@
 import time
+import random
+
 from IPython.display import clear_output
 
-from dungeoncrawl.board import Board
+from dungeoncrawl.entities.board import Board
 from dungeoncrawl.entities.characters import Party
-from dungeoncrawl.bosses import Boss
 from dungeoncrawl.entities.pawn import Pawn
+
 from dungeoncrawl.utilities.location import Point
+
+from dungeoncrawl.bosses import Boss
 
 class Level:
     board: Board
@@ -23,9 +27,11 @@ class Level:
         for pawn, square in zip(party, party_starty):
             pawn._position = square.position
             pawn.move_history = [square.position]
+            pawn.face(random.choice(board.get_adjacent_squares(pawn.position)))
 
         boss._position = boss_starty.position
         boss.move_history = [boss_starty.position]
+        boss.face(random.choice(board.get_adjacent_squares(boss.position)))
         
         self.board = board
         self.party = party
@@ -60,7 +66,9 @@ class Level:
                 self.boss._tick()
                 self.boss._tick_logic(self.party, self.board)
                 self.move(self.boss, self.boss.position)
-            
+                self.boss._post_tick()
+            else:
+                self.boss._post_tick()
 
             # send tick to party, boss
             self.party._tick()
@@ -72,9 +80,12 @@ class Level:
                 clear_output(wait=True)
                 print(self)
                 time.sleep(self.tick_speed)
+            self.party._post_tick()
 
             # player turns happen here
             yield self.turn_count
+        
+        # game over
         for player in self.party:
             self.move(player, player.position)
         self.boss._tick()
@@ -83,6 +94,9 @@ class Level:
         
         clear_output(wait=True)
         print(self)
+
+        self.party._post_tick()
+        
         yield self.turn_count
 
     def __str__(self):

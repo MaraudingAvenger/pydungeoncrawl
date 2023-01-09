@@ -1,5 +1,31 @@
 from dungeoncrawl.entities.equipment import Gear, GearSet
 
+class Armor(Gear):
+    def __init__(self,
+        name: str,
+        category: str,
+        description: str,
+        damage_reduction_percent: float,
+        damage_reduction_number: int = 0,
+        damage: int = 0,
+        damage_type: str = 'physical',
+        bonus_damage_output_percent=0,
+        bonus_max_health: int = 0,
+        bonus_max_health_percent: float = 0
+    ) -> None:
+        super().__init__(
+            name=name,
+            category=category,
+            description=description,
+            damage=damage,
+            damage_type = damage_type,
+            bonus_damage_output_percent= bonus_damage_output_percent,
+            damage_reduction_number=damage_reduction_number,
+            damage_reduction_percent=damage_reduction_percent,
+            bonus_max_health = bonus_max_health,
+            bonus_max_health_percent = bonus_max_health_percent
+        )
+
 class Shield(Gear):
     def __init__(self) -> None:
         super().__init__(

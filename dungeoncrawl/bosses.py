@@ -1,12 +1,14 @@
 import abc
 import heapq
 
-from dungeoncrawl.board import Board
-from dungeoncrawl.debuffs import Embarassed
+from dungeoncrawl.entities.board import Board
 from dungeoncrawl.entities.monster import Monster
 from dungeoncrawl.entities.pawn import Pawn, _action_decorator
 from dungeoncrawl.entities.characters import Party
+
 from dungeoncrawl.utilities.location import Point, distance_between
+
+from dungeoncrawl.debuffs import Embarassed
 
 class Boss(Monster, abc.ABC):
     @abc.abstractmethod
@@ -76,7 +78,7 @@ class TrainingDummy(Boss):
     def __init__(self):
         name="Training Dummy"
         position=Point(0, 0)
-        health_max=1
+        health_max=10000
         super().__init__(name=name, position=position, health_max=health_max)
 
     def get_target(self, party: Party) -> Pawn:
@@ -93,7 +95,10 @@ class TrainingDummy(Boss):
 
     def _tick_logic(self, party: Party, board: Board):
         target = self.get_target(party)
-        self.shout_at(target)
+        if self.is_on_cooldown("shout at"):
+            self.make_a_ruckus(party)
+        else:
+            self.shout_at(target)
 
 
 
@@ -118,7 +123,7 @@ class DummyBoss(Boss):
         if distance_between(self.position, target.position) > 1.5:
             path = self._astar(board=board, start=self.position, goal=target.position)
             if path is not None:
-                self.move_toward(path[0])
+                self.move(path[0])
         else:
             if self.is_on_cooldown("Attack"):
                 self.aoe(party)

@@ -1,6 +1,3 @@
-from functools import singledispatchmethod
-import heapq
-
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.utilities.location import Point, bresenham, distance_between
 
@@ -42,7 +39,7 @@ class Square:
             self.damage = 0
         else:
             self.is_burning = True
-            self._symbol = '🔥'
+            self._symbol = '🟨'
             self.damage = damage
 
     def toggle_lava(self) -> None:
@@ -144,9 +141,9 @@ class Board:
         "get a list of players in the provided radius"
         return list(filter(None,
                           [square.occupant
-                          for square in self.get_squares_in_range(origin, radius)]))
+                          for square in self.get_squares_in_radius(origin, radius)]))
 
-    def get_squares_in_range(self, origin: Point, radius: int) -> list[Square]:
+    def get_squares_in_radius(self, origin: Point, radius: int) -> list[Square]:
         "get a list of squares in the provided radius"
         return list(filter(None,
                            [self.at(Point(origin.x + x, origin.y + y))

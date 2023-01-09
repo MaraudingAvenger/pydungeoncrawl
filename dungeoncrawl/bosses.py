@@ -1,5 +1,6 @@
 import abc
 import heapq
+from typing import Tuple, Union
 
 from dungeoncrawl.entities.board import Board
 from dungeoncrawl.entities.monster import Monster
@@ -8,14 +9,15 @@ from dungeoncrawl.entities.characters import Party
 
 from dungeoncrawl.utilities.location import Point, distance_between
 
-from dungeoncrawl.debuffs import Embarassed
+from dungeoncrawl.debuffs import Curse, Embarassed
+from dungeoncrawl.weapons import Dagger, Sword
 
 class Boss(Monster, abc.ABC):
     @abc.abstractmethod
     def _tick_logic(self, party: Party, board: Board):
         ...
 
-    def _astar(self, board: Board, start: Point|tuple, goal: Point|tuple) -> list[Point] | None:
+    def _astar(self, board: Board, start: Union[Point,Tuple], goal: Union[Point,Tuple]) -> list[Point] | None:
 
         start = tuple(start)
         goal = tuple(goal)
@@ -68,6 +70,44 @@ class Boss(Monster, abc.ABC):
                     heapq.heappush(oheap, (fscore[neighbor], neighbor))
 
 
+
+###################
+# ~~ TEST BOSS ~~ #
+###################
+
+class DummyBoss(Boss):
+    def __init__(self):
+        name="Dummy Boss"
+        position=Point(0, 0)
+        health_max=20000
+        super().__init__(name=name, position=position, health_max=health_max)
+
+    def get_target(self, party: Party) -> Pawn:
+        return self._get_target(party)
+
+    def _tick_logic(self, party: Party, board: Board):
+        target = self._get_target(party)
+
+        if distance_between(self.position, target.position) > 1.5:
+            path = self._astar(board=board, start=self.position, goal=target.position)
+            if path is not None:
+                self.move(path[0])
+        else:
+            if self.is_on_cooldown("Attack"):
+                self.aoe(party)
+            else:
+                self.attack(target)
+
+    @_action_decorator(cooldown=2, melee=True) # type: ignore
+    def attack(self, target: Pawn):
+        target._take_damage(self, 20, "physical")
+
+    @_action_decorator(cooldown=10) # type: ignore
+    def aoe(self, party: Party):
+        for pawn in party.members:
+            pawn._take_damage(self, 50, "physical")
+
+
 ##################################
 # ~~ Training Scenario Bosses ~~ #
 ##################################
@@ -101,18 +141,13 @@ class TrainingDummy(Boss):
             self.shout_at(target)
 
 
-
-
-###################
-# ~~ TEST BOSS ~~ #
-###################
-
-class DummyBoss(Boss):
+class LostKobold(Boss):
     def __init__(self):
-        name="Dummy Boss"
+        name="Lost Kobold"
         position=Point(0, 0)
-        health_max=10000
+        health_max=5000
         super().__init__(name=name, position=position, health_max=health_max)
+        self.equip(Dagger())
 
     def get_target(self, party: Party) -> Pawn:
         return self._get_target(party)
@@ -125,16 +160,68 @@ class DummyBoss(Boss):
             if path is not None:
                 self.move(path[0])
         else:
-            if self.is_on_cooldown("Attack"):
-                self.aoe(party)
-            else:
-                self.attack(target)
+            self.fumbling_attack(target)
 
-    @_action_decorator(cooldown=2, melee=True) # type: ignore
-    def attack(self, target: Pawn):
-        target._take_damage(self, 20, "physical")
+    @_action_decorator(melee=True) # type: ignore
+    def fumbling_attack(self, target: Pawn):
+        target._take_damage(self, self.calculate_damage(5, target), "physical")
+
+
+class KoboldMother(Boss):
+    def __init__(self):
+        name="Kobold Mother"
+        position=Point(0, 0)
+        health_max=10000
+        super().__init__(name=name, position=position, health_max=health_max)
+        self.equip(Sword())
+
+    def get_target(self, party: Party) -> Pawn:
+        return self._get_target(party)
+
+    def _tick_logic(self, party: Party, board: Board):
+        target = self._get_target(party)
+
+        if distance_between(self.position, target.position) > 1.5:
+            path = self._astar(board=board, start=self.position, goal=target.position)
+            if path is not None:
+                self.move(path[0])
+        else:
+            self.motherly_love(target)
+
+    @_action_decorator(melee=True) # type: ignore
+    def motherly_love(self, target: Pawn):
+        target._take_damage(self, self.calculate_damage(40, target), "physical")
+
+
+class KoboldQueen(Boss):
+    def __init__(self):
+        name="Kobold Queen"
+        position=Point(0, 0)
+        health_max=20000
+        super().__init__(name=name, position=position, health_max=health_max)
+        self.equip(Sword())
+
+    def get_target(self, party: Party) -> Pawn:
+        return self._get_target(party)
+
+    def _tick_logic(self, party: Party, board: Board):
+        target = self._get_target(party)
+
+        if distance_between(self.position, target.position) > 1.5:
+            path = self._astar(board=board, start=self.position, goal=target.position)
+            if path is not None:
+                self.move(path[0])
+        else:
+            if not self.is_on_cooldown("Curse"):
+                self.curse(party)
+            else:
+                self.savage_strike(target)
+
+    @_action_decorator(melee=True) # type: ignore
+    def savage_strike(self, target: Pawn):
+        target._take_damage(self, 60, "physical")
 
     @_action_decorator(cooldown=10) # type: ignore
-    def aoe(self, party: Party):
-        for pawn in party.members:
-            pawn._take_damage(self, 50, "physical")
+    def curse(self, party: Party):
+        for pawn in list(party.dps) + [party.healer]:
+            pawn.effects.add(Curse(caster=self, target=pawn, duration=8, dot_amount=self.calculate_damage(3, pawn)))

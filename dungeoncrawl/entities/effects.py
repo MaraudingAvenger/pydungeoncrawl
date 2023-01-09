@@ -1,7 +1,7 @@
 import time
 import hashlib
 from collections import Counter
-from typing import Iterator
+from typing import Iterator, Union
 
 _SORT_PRIORITY = {
     "Might": 1,
@@ -49,7 +49,7 @@ class Effect:
     def __init__(self,
                  name: str,
                  category: set[str] | None = None,
-                 duration: int | float = float("inf"),
+                 duration: Union[int, float] = float("inf"),
                  description: str = "",
                  new: bool = True,
                  symbol: str = "⚙",
@@ -152,7 +152,9 @@ class Effects:
                 damager,
                 int(round(damage * effect.reflect_damage_percent +
                     effect.reflect_damage_amount)),
-                damage_type='reflect')
+                damage_type='reflect',
+                ability=True,
+                ability_name="Reflect")
 
     ########################################
     # ~~ Add, remove, and count effects ~~ #
@@ -192,7 +194,7 @@ class Effects:
         'remove one effect from the collection'
         self._effects.pop(self._effects.index(effect))
 
-    def count(self, effect: str | Effect) -> int:
+    def count(self, effect: Union[str, Effect]) -> int:
         'return the number of effects in the collection'
         if isinstance(effect, Effect):
             return len(list(filter(lambda e: e.name == effect.name, self._effects)))
@@ -231,6 +233,17 @@ class Effects:
         'return True if the collection contains a Vulnerability effect of the specified damage type'
         if (vulns := self.vulnerabilities):
             return any(damage_type.lower() in e.name.lower() for e in vulns)
+        return False
+
+    @property
+    def resistances(self) -> list[Effect]:
+        'return a list of Resistance effects in the collection'
+        return [effect for effect in self._effects if 'resist' in effect.name.lower()]
+
+    def resistant_to(self, damage_type:str) -> bool:
+        'return True if the collection contains a Resistance effect of the specified damage type'
+        if (resists := self.resistances):
+            return any(damage_type.lower() in e.name.lower() for e in resists)
         return False
 
     @property

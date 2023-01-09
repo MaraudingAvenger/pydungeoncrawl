@@ -1,3 +1,4 @@
+from typing import Tuple, Union
 from dungeoncrawl.entities.effects import Effects
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.utilities.location import Point, distance_between
@@ -8,7 +9,7 @@ import functools
 
 class Monster(Pawn):
     # type: ignore
-    def __init__(self, name: str, position: Point | tuple[int, int] = Point(0, 0), health_max: int = 500, symbol: str = '👹'):
+    def __init__(self, name: str, position: Union[Point, Tuple[int, int]] = Point(0, 0), health_max: int = 500, symbol: str = '👹'):
         super().__init__(name=name, position=position, health_max=health_max, symbol=symbol)
         self.effects = Effects()
         self.health = self.health_max

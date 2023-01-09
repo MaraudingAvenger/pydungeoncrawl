@@ -1,5 +1,6 @@
 import math
 import random
+from typing import Union, Tuple
 
 from dungeoncrawl.entities.pawn import Pawn, _action_decorator
 from dungeoncrawl.entities.characters import Character, Party
@@ -24,7 +25,7 @@ class Guardian(Character):
         '''
         symbol: str = '🛡️'
         role: str='tank'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int, int]] = Point(0, 0)
         health_max: int = 110
         gear = PlateArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
@@ -78,7 +79,7 @@ class Paladin(Character):
     def __init__(self, name: str) -> None:
         symbol: str = '⚜️'
         role: str='tank'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
         health_max: int = 120
         gear = PlateArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
@@ -139,7 +140,7 @@ class Berzerker(Character):
     def __init__(self, name:str) -> None:
         symbol: str = '⚔️'
         role: str='tank'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
         health_max: int = 150
         gear = ChainmailArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
@@ -199,7 +200,7 @@ class Cleric(Character):
     def __init__(self, name: str) -> None:
         symbol: str = '🔅'
         role: str='healer'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int, int]] = Point(0, 0)
         health_max: int = 100
         gear = PlateArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
@@ -245,7 +246,7 @@ class Druid(Character):
     def __init__(self, name:str) -> None:
         symbol: str = '☘️'
         role: str='healer'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
         health_max: int = 100
         gear = LeatherArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
@@ -291,7 +292,7 @@ class Shaman(Character):
     def __init__(self, name:str) -> None:
         symbol: str = '🍄'
         role: str='healer'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
         health_max: int = 100
         gear = ChainmailArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
@@ -344,8 +345,8 @@ class Ranger(Character):
     def __init__(self, name:str):
         symbol: str = '🏹'
         role: str='dps'
-        position: Point | tuple[int, int] = Point(0, 0)
-        health_max: int = 100
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
+        health_max: int = 80
         gear = LeatherArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
         self.equip(ShortBow())
@@ -393,7 +394,7 @@ class Rogue(Character):
     def __init__(self, name) -> None:
         symbol: str = '🗡️'
         role: str='dps'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
         health_max: int = 100
         gear = LeatherArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
@@ -458,8 +459,8 @@ class Necromancer(Character):
     def __init__(self, name: str) -> None:
         symbol: str = '🦴'
         role: str='dps'
-        position: Point | tuple[int, int] = Point(0, 0)
-        health_max: int = 90
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
+        health_max: int = 80
         gear = ClothArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
         self.equip(Wand())
@@ -522,7 +523,7 @@ class Wizard(Character):
     def __init__(self, name:str) -> None:
         symbol: str = '🧙'
         role: str='dps'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
         health_max: int = 80
         gear = ClothArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)
@@ -553,7 +554,7 @@ class Wizard(Character):
         target.effects.add_stacks(FrostResistance, stacks=2)
 
     @_action_decorator(cooldown=10, melee=False) #type: ignore
-    def teleport(self, target: Pawn, location: Point | tuple[int,int]) -> None:
+    def teleport(self, target: Pawn, location: Union[Point,Tuple[int,int]]) -> None:
         'Instantly Teleport self or target to anywhere in the arena.'
         target._teleport(location)
         target.face(random.choice(get_adjacent_points(location)))
@@ -579,7 +580,7 @@ class Bard(Character):
     def __init__(self, name: str) -> None:
         symbol: str = '🎵'
         role: str='dps'
-        position: Point | tuple[int, int] = Point(0, 0)
+        position: Union[Point,Tuple[int,int]] = Point(0, 0)
         health_max: int = 90
         gear = LeatherArmor()
         super().__init__(name=name, symbol=symbol, role=role, position=position, health_max=health_max, gear=gear)

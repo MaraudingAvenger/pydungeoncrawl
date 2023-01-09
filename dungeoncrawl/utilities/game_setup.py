@@ -1,6 +1,6 @@
 import json
 from os import PathLike
-from typing import Any
+from typing import Any, Union
 
 from dungeoncrawl.entities.board import Square, Board
 from dungeoncrawl.utilities.location import Point
@@ -33,7 +33,7 @@ def square_to_dict(s: Square) -> dict[str,Any]:
         'damage': s.damage,
     }
 
-def json_to_board(json_loc:str|PathLike) -> Board:
+def json_to_board(json_loc:Union[str,PathLike]) -> Board:
     squares = json.load(open(json_loc, encoding='utf-8'))
     grid = []
     for _ in range(len(squares)):

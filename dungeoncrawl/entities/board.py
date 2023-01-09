@@ -1,10 +1,11 @@
+from typing import Tuple, Union
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.utilities.location import Point, bresenham, distance_between
 
 
 class Square:
     def __init__(self, position: Point, symbol: str = '⬜', impassable: bool = False, is_water: bool = False,
-                 is_burning: bool = False, is_lava: bool = False, damage: int = 0, occupant: Pawn | None = None) -> None:
+                 is_burning: bool = False, is_lava: bool = False, damage: int = 0, occupant: Union[Pawn, None] = None) -> None:
         self.position = position
         self._base_symbol = symbol
         self._symbol = symbol
@@ -104,7 +105,7 @@ class Board:
                     square.occupant = None
                 square.trigger_effect()
 
-    def at(self, position: Point | tuple[int, int]) -> Square | None:
+    def at(self, position: Union[Point, Tuple[int, int]]) -> Square | None:
         "get square at position (x, y)"
         if isinstance(position, tuple):
             position = Point(position[0], position[1])
@@ -127,7 +128,7 @@ class Board:
         "get a list of squares at the provided points"
         return list(filter(None, [self.at(point) for point in points]))
 
-    def get_players_in_positions(self, *positions: Point | tuple[int, int]) -> list[Pawn]:
+    def get_players_in_positions(self, *positions: Union[Point, Tuple[int, int]]) -> list[Pawn]:
         "get a list of players in the provided positions"
         return [self.at(pos).occupant # type: ignore
                 for pos in positions
@@ -178,7 +179,7 @@ class Board:
             radius += 1
         return player
 
-    def distance_between(self, origin: Pawn | Point, destination: Pawn | Point) -> float:
+    def distance_between(self, origin: Union[Pawn, Point], destination: Union[Pawn, Point]) -> float:
         "get the distance between two points"
         if isinstance(origin, Pawn):
             origin = origin.position

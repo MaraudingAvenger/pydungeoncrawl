@@ -36,6 +36,7 @@
 # Shield Stance - Reduce damage by 75% for 3 turns. Prevents any action during this time. At the end receive 5 stacks of Toughness for each hit taken while Shield Stance was active.
 #
 
+from typing import Union
 from dungeoncrawl.entities.characters import Party
 from dungeoncrawl.entities.pawn import Pawn
 from dungeoncrawl.entities.effects import Effect
@@ -45,7 +46,7 @@ from dungeoncrawl.debuffs import ExposeWeakness
 
 
 class Parry(Effect):
-    def __init__(self, user: Pawn, duration: int | float = float('inf')) -> None:
+    def __init__(self, user: Pawn, duration: Union[int,float] = float('inf')) -> None:
         super().__init__(name="Parry", duration=duration, take_bonus_damage_percent=-1.0,
                          category={'physical', 'buff', 'parry', 'defense', 'defensive', 'reflect'}, symbol='🖕')
         self.user = user
@@ -61,13 +62,13 @@ class Parry(Effect):
 
 
 class Might(Effect):
-    def __init__(self, duration: int | float) -> None:
+    def __init__(self, duration: Union[int,float]) -> None:
         super().__init__(name="Might", duration=duration, deal_bonus_damage_percent=.05,
                          category={'physical', 'buff', 'might', 'strength', 'offensive'}, symbol='💪')
 
 
 class Toughness(Effect):
-    def __init__(self, duration: int | float) -> None:
+    def __init__(self, duration: Union[int,float]) -> None:
         super().__init__(name="Toughness", duration=duration, take_bonus_damage_percent=-.05,
                          category={'physical', 'buff', 'tough', 'toughness', 'defense', 'defensive', 'modifier'}, symbol='✊')
 
@@ -119,7 +120,7 @@ class DivineProtection(Effect):
 
 
 class Reflect(Effect):
-    def __init__(self, duration: int | float, extra: float = 0.) -> None:
+    def __init__(self, duration: Union[int,float], extra: float = 0.) -> None:
         percent = .5 + extra
         super().__init__(name="Reflect", duration=duration, category={
             'physical', 'buff', 'reflect', 'defense', 'offense', 'defensive', 'offensive'}, symbol='♻', reflect_damage_percent=percent,)

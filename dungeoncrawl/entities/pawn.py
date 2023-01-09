@@ -2,7 +2,7 @@ import math
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import singledispatchmethod, wraps
-from typing import Any, Literal
+from typing import Any, Literal, Tuple, Union
 
 from dungeoncrawl.armor import ClothArmor
 from dungeoncrawl.debuffs import MagicVulnerability
@@ -113,7 +113,7 @@ class Pawn(_Character):
 
     def __init__(self,
                  name,
-                 position: Point | tuple[int, int],
+                 position: Union[Point, Tuple[int, int]],
                  health_max: int,
                  symbol: str = '@',
                  gear: GearSet = ClothArmor()) -> None:
@@ -129,8 +129,9 @@ class Pawn(_Character):
         self.health_max = health_max
         self._health = health_max
         self._is_dead: bool = False
+        self._is_already_dead: bool = False
         self._was_hit: bool = False
-        self.current_action: Action | None = None
+        self.current_action: Union[Action, None] = None
         self.ability_cooldowns = {}
 
         # effects
@@ -155,7 +156,7 @@ class Pawn(_Character):
         return self._position
 
     @position.setter
-    def position(self, value: Point | tuple[int, int]) -> None:
+    def position(self, value: Union[Point, Tuple[int, int]]) -> None:
         if not self.moved_this_turn:
             self._position = value if isinstance(
                 value, Point) else Point(*value)
@@ -189,8 +190,12 @@ class Pawn(_Character):
         )
 
     @property
-    def points_behind(self) -> tuple[Point, ...]:
+    def points_behind(self) -> Tuple[Point, ...]:
         return behinds(self.position, self.facing_direction)
+
+    @property
+    def positions_behind(self) -> Tuple[Point, ...]:
+        return self.points_behind
 
     @property
     def symbol(self) -> str:
@@ -235,6 +240,10 @@ class Pawn(_Character):
             self._is_dead = self._health <= 0
 
     @property
+    def health_percent(self) -> float:
+        return round(self.health / self.health_max, 2)
+
+    @property
     def is_alive(self) -> bool:
         return not self._is_dead
 
@@ -273,6 +282,10 @@ class Pawn(_Character):
     def _(self, x: int, y: int) -> float:
         return self.distance_to(x, y)
 
+
+    def is_behind(self, other: 'Pawn') -> bool:
+        return other.position in self.points_behind
+
     ####################
     # ~~~ Movement ~~~ #
     ####################
@@ -281,7 +294,7 @@ class Pawn(_Character):
             return self.move_toward(destination)
 
     @_check_can_move
-    def move_toward(self, target: Point | _Character) -> None:
+    def move_toward(self, target: Union[Point, _Character]) -> None:
         "my bum is on the cheese"
         if not self._is_dead:
             if isinstance(target, _Character):
@@ -399,7 +412,8 @@ class Pawn(_Character):
                 type='damage',
                 action_name=f'{effect.name} ticked for {effect.damage_over_time} damage',
                 actor=effect.name,
-                target=self.name,
+                target=self,
+                target_effects=self.effects.to_dict(),
                 ability_used=effect.name,
                 damage=effect.damage_over_time,
             ))
@@ -411,16 +425,20 @@ class Pawn(_Character):
                 type='damage',
                 action_name=f'{effect.name} healed for {effect.heal_over_time} health',
                 actor=effect.name,
-                target=self.name,
+                target=self,
+                target_effects=self.effects.to_dict(),
                 ability_used=effect.name,
                 damage=effect.heal_over_time,
             ))
         
         if self.health <= 0:
+            if not self._is_already_dead:
+                    self._is_already_dead = True
+                    self.reports['death'] = f'{self.name} died on turn {self._turn}!'
             self.health = 0
             self._is_dead = True
 
-    def _take_damage(self, damager: 'Pawn', damage: int, damage_type: str) -> None:
+    def _take_damage(self, damager: 'Pawn', damage: int, damage_type: str, ability=False, ability_name="") -> None:
         barriers = self.effects.get_any_category_name('barrier') # cancels damage
         if barriers:
             barriers[0].on_activate(
@@ -487,7 +505,7 @@ class Pawn(_Character):
                 target=self,
                 failed=False,
                 damage=damage,
-                ability_used=damager.current_action.action_name if isinstance(damager, Pawn) else 'Tile', #type: ignore
+                ability_used=ability_name if ability else (damager.current_action.action_name if isinstance(damager, Pawn) else 'Tile'), #type: ignore
                 actor_effects=damager.effects.to_dict() if isinstance(damager, Pawn) else None,
                 target_effects=self.effects.to_dict()
             ))
@@ -497,6 +515,9 @@ class Pawn(_Character):
             self._was_hit = True
 
             if self.health <= 0:
+                if not self._is_already_dead:
+                    self._is_already_dead = True
+                    self.reports['death'] = f'{self.name} died on turn {self._turn}!'
                 self.health = 0
                 self._is_dead = True
 
@@ -528,13 +549,13 @@ class Pawn(_Character):
     # ~~~ Passthrough Methods ~~~ #
     ###############################
 
-    def has_effect(self, effect: str | Effect) -> bool:
+    def has_effect(self, effect: Union[str, Effect]) -> bool:
         return self.effects.count(effect) > 0
 
-    def equip(self, item: Gear | GearSet) -> None:
+    def equip(self, item: Union[Gear, GearSet]) -> None:
         return self.equipment.equip(item)
 
-    def unequip(self, item: Gear | GearSet | str) -> None:
+    def unequip(self, item: Union[Gear, GearSet, str]) -> None:
         return self.equipment.unequip(item)
 
     @property
@@ -574,6 +595,19 @@ class Pawn(_Character):
         """
         return self.effects.vulnerable_to(damage_type)
 
+    @property
+    def resistances(self) -> list[Effect]:
+        return self.effects.resistances
+
+    def resistant_to(self, damage_type: str):
+        """
+        Returns True if the pawn is resistant to the given damage type.
+
+        e.g. 
+        `pawn.resistant_to('magic')` -> `True`
+        """
+        return self.effects.resistant_to(damage_type)
+
     #############################
     # ~~~ Effect Management ~~~ #
     #############################
@@ -600,14 +634,13 @@ class Pawn(_Character):
                 self.effects.remove_one(ice_effect)
                 self.effects.remove_one(fire_effect)
 
-        # tick self.effects
-        self.effects._tick()  # updates durations and removes expired effects
-
-
         # increment turn counter
         self._turn += 1
 
     def _post_tick(self) -> None:
+        # tick self.effects
+        self.effects._tick()  # updates durations and removes expired effects
+
         # decrement ability cooldowns
         if self.ability_cooldowns:
             for name, cooldown in self.ability_cooldowns.items():
@@ -620,7 +653,7 @@ class Pawn(_Character):
         self._was_hit = False
         self.current_action = None
 
-    def stacks(self, effect: str | Effect) -> int:
+    def stacks(self, effect: Union[str, Effect]) -> int:
         '''
         Return the number of stacks of the specified effect that are currently active on the player.
 
@@ -656,14 +689,14 @@ class Action:
     turn: int
     type: Literal['ability', 'move', 'damage']
     action_name: str
-    actor: Pawn | str
-    target: Pawn | None | Point | str
+    actor: Union[Pawn, str]
+    target: Union[Pawn, Point, str, None]
     failed: bool = field(default=False, init=True)
     failed_reason: str = field(default='', init=True)
-    ability_used: str | None = field(default=None, init=True)
-    damage: int | None = field(default=None, init=True)
-    actor_effects: Counter | None = field(default=None, init=True)
-    target_effects: Counter | None = field(default=None, init=True)
+    ability_used: Union[str, None] = field(default=None, init=True)
+    damage: Union[int, None] = field(default=None, init=True)
+    actor_effects: Union[Counter, None] = field(default=None, init=True)
+    target_effects: Union[Counter, None] = field(default=None, init=True)
 
     def __post_init__(self):
         self.action_name = clean_name(self.action_name)

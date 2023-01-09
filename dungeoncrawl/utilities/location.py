@@ -2,7 +2,7 @@ import math
 import re
 from dataclasses import dataclass
 from functools import singledispatch
-from typing import Generator
+from typing import Generator, Tuple, Union
 
 def clean_name(name):
     name = re.sub(r'([a-z])([A-Z])', r'\1 \2', name)
@@ -30,7 +30,7 @@ class Point:
         yield self.y
 
 @singledispatch
-def distance_between(a: Point|tuple[int,int], b: Point|tuple[int,int]) -> float:
+def distance_between(a: Union[Point,Tuple[int,int]], b: Union[Point, Tuple[int,int]]) -> float:
     if isinstance(a, tuple):
         a = Point(*a)
     if isinstance(b, tuple):
@@ -106,7 +106,7 @@ def bresenham(origin: Point, destination: Point) -> Generator[Point, None, None]
             y1 = y1 + sy
         yield Point(x1, y1)
 
-def get_adjacent_points(position: Point | tuple[int,int]) -> list[Point]:
+def get_adjacent_points(position: Union[Point,Tuple[int,int]]) -> list[Point]:
     "get a list of adjacent points to a given point"
     if isinstance(position, tuple):
         position = Point(*position)

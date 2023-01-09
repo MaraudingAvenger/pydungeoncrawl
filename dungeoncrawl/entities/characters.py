@@ -1,3 +1,4 @@
+from typing import Tuple, Union
 from dungeoncrawl.entities.equipment import GearSet
 from dungeoncrawl.entities.pawn import Pawn, Action, _action_decorator
 from dungeoncrawl.entities.effects import Effect
@@ -5,7 +6,7 @@ from dungeoncrawl.utilities.location import Point
 from dungeoncrawl.armor import ClothArmor
 
 class Character(Pawn):
-    def __init__(self, name: str, symbol: str, role: str, position: Point | tuple[int, int] = Point(0, 0), health_max: int = 100, gear: GearSet = ClothArmor()) -> None:
+    def __init__(self, name: str, symbol: str, role: str, position: Union[Point, Tuple[int, int]] = Point(0, 0), health_max: int = 100, gear: GearSet = ClothArmor()) -> None:
         super().__init__(name, position, health_max, symbol, gear=gear)
         self.name = name
         self.role = role
@@ -71,6 +72,26 @@ class Party:
     def furthest_from(self, target: Pawn) -> Character:
         return max(self.members, key=lambda x: x.distance_from(target))
 
+    #############################
+    # ~~ Convenience Methods ~~ #
+    #############################
+
+    @property
+    def lowest_health(self) -> Character:
+        return min(self.members, key=lambda x: x.health)
+
+    @property
+    def lowest_health_percent(self) -> Character:
+        return min(self.members, key=lambda x: x.health_percent)
+
+    @property
+    def highest_health(self) -> Character:
+        return max(self.members, key=lambda x: x.health)
+    
+    @property
+    def highest_health_percent(self) -> Character:
+        return max(self.members, key=lambda x: x.health_percent)
+
     @property
     def tank(self) -> Pawn:
         return self._tank
@@ -112,7 +133,7 @@ class Party:
 
 
 class DummyHero(Character):
-    def __init__(self, name: str, position: Point | tuple[int, int], role, symbol:str='🍄') -> None:
+    def __init__(self, name: str, position: Union[Point, Tuple[int, int]], role, symbol:str='🍄') -> None:
         super().__init__(name, symbol, role, position, 100)
         self.equip(ClothArmor())
         self.turn = None

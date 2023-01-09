@@ -134,9 +134,20 @@ class MagicVulnerability(Effect):
 
 class DoT(Effect):
     def __init__(self, target, name: str, duration:int=3, dot_amount:int=3) -> None:
+        self.target=target
         super().__init__(name=name, duration=duration, damage_over_time=dot_amount,
                          category={'dot', 'debuff', 'damage', 'damage over time', 'curable'}, symbol='🩸')
 
+
+class Curse(Effect):
+    def __init__(self, caster, target, duration, dot_amount) -> None:
+        super().__init__(name="Curse", duration=duration, damage_over_time=dot_amount,
+                         category={'dot', 'debuff', 'damage', 'damage over time', 'curable'}, symbol='🩸')
+        self.target = target
+        self.caster = caster
+
+    def on_expire(self):
+        self.target._take_damage(self.caster, 10000, 'curse', True, "Curse")
 
 class Doom(Effect):
     def __init__(self, caster, target, damage: int) -> None:
@@ -161,7 +172,8 @@ class Doom(Effect):
             self.duration = 0
 
     def on_expire(self):
-        self.target._take_damage(self.caster, int(self.base_damage), 'spirit')
+        self.duration=0
+        self.target._take_damage(self.caster, int(self.base_damage), 'spirit', True, "Doom")
 
 class ShadeOfDeath(Effect):
     def __init__(self, caster, target, damage:int=0) -> None:
@@ -183,7 +195,7 @@ class ShadeOfDeath(Effect):
         self.position = path[0] if path else self.position
 
     def on_expire(self):
-        self.target._take_damage(self.caster, self.damage_total, 'spirit')
+        self.target._take_damage(self.caster, self.damage_total, 'spirit', True, "Shade of Death")
         self.target.effects.add_stacks(ExposeWeakness, stacks=10, duration=5)
         self.target.effects.add_stacks(MagicVulnerability, stacks=10)
         self.target.effects.add_stacks(Frailty, stacks=10, duration=5)

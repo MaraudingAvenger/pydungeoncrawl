@@ -4,14 +4,14 @@ from dataclasses import dataclass, field
 from functools import singledispatchmethod, wraps
 from typing import Any, Literal, Tuple, Union
 
-from dungeoncrawl.armor import ClothArmor
-from dungeoncrawl.debuffs import MagicVulnerability
+from ..armor import ClothArmor
+from ..debuffs import MagicVulnerability
 
-from dungeoncrawl.entities.equipment import Gear, GearSet
-from dungeoncrawl.entities.equipment import Equipment
-from dungeoncrawl.entities.effects import Effect, Effects
+from .equipment import Gear, GearSet
+from .equipment import Equipment
+from .effects import Effect, Effects
 
-from dungeoncrawl.utilities.location import Point, bresenham, clean_name, distance_between, behinds
+from ..utilities.location import Point, bresenham, clean_name, distance_between, behinds
 
 
 @dataclass
@@ -743,3 +743,7 @@ class Action:
     def __str__(self):
         return self.__repr__()
 
+if __name__ == "__main__":
+    p = Pawn(name="Oingo Boingo", position=(0,0), health_max=100)
+    print(f"Pawn named {p.name} at position {p.position} with {p.health}/{p.health_max} HP")
+    print(p)

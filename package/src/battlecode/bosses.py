@@ -2,15 +2,15 @@ import abc
 import heapq
 from typing import Tuple, Union
 
-from dungeoncrawl.entities.board import Board
-from dungeoncrawl.entities.monster import Monster
-from dungeoncrawl.entities.pawn import Pawn, _action_decorator
-from dungeoncrawl.entities.characters import Party
+from .entities.board import Board
+from .entities.monster import Monster
+from .entities.pawn import Pawn, _action_decorator
+from .entities.characters import Party
 
-from dungeoncrawl.utilities.location import Point, distance_between
+from .utilities import Point, distance_between
 
-from dungeoncrawl.debuffs import Curse, Embarassed
-from dungeoncrawl.weapons import Dagger, Sword
+from .debuffs import Curse, Embarassed
+from .weapons import Dagger, Sword
 
 class Boss(Monster, abc.ABC):
     @abc.abstractmethod

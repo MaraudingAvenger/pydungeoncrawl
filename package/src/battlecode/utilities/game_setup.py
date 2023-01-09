@@ -2,8 +2,8 @@ import json
 from os import PathLike
 from typing import Any, Union
 
-from dungeoncrawl.entities.board import Square, Board
-from dungeoncrawl.utilities.location import Point
+from ..entities import Square, Board
+from .location import Point
 
 # {
 # "position": [0, 0],

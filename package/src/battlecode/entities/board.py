@@ -1,6 +1,6 @@
 from typing import Tuple, Union
-from dungeoncrawl.entities.pawn import Pawn
-from dungeoncrawl.utilities.location import Point, bresenham, distance_between
+from .pawn import Pawn
+from ..utilities.location import Point, bresenham, distance_between
 
 
 class Square:

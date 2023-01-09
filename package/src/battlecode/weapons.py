@@ -1,4 +1,4 @@
-from dungeoncrawl.entities.equipment import Gear
+from .entities import Gear
 
 class Mace(Gear):
     def __init__(self) -> None:

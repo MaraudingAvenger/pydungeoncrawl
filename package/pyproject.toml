@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "battlecode"
+version = "0.1.0"
+authors = [
+  { name="Luke Chambers", email="marauding.avenger@gmail.com" },
+  { name="Shaun Eames", email="Nythious@gmail.com" }
+]
+description = "A package to create and play a python-based fantasy combat game."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Games/Entertainment :: Board Games",
+    "Topic :: Games/Entertainment :: Puzzle Games",
+    "Topic :: Games/Entertainment :: Turn Based Strategy"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/MaraudingAvenger/pydungeoncrawl"
+"Bug Tracker" = "https://github.com/MaraudingAvenger/pydungeoncrawl/issues"

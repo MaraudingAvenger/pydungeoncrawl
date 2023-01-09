@@ -1,8 +1,9 @@
 from typing import Tuple, Union
-from dungeoncrawl.entities.effects import Effects
-from dungeoncrawl.entities.pawn import Pawn
-from dungeoncrawl.utilities.location import Point, distance_between
-from dungeoncrawl.entities.characters import Party
+from .effects import Effects
+from .pawn import Pawn
+from .characters import Party
+
+from ..utilities.location import Point, distance_between
 
 
 import functools

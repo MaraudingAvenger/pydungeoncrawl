@@ -2,15 +2,15 @@ import math
 import random
 from typing import Union, Tuple
 
-from dungeoncrawl.entities.pawn import Pawn, _action_decorator
-from dungeoncrawl.entities.characters import Character, Party
-from dungeoncrawl.utilities.location import Point, bresenham, get_adjacent_points
+from .entities.pawn import Pawn, _action_decorator
+from .entities.characters import Character, Party
+from .utilities.location import Point, bresenham, get_adjacent_points
 
-from dungeoncrawl.armor import ClothArmor, LeatherArmor, PlateArmor, ChainmailArmor, Shield
-from dungeoncrawl.weapons import Sword, Claymore, Mace, Dagger, Staff, ShortBow, Wand, SideKnife, Lute
+from .armor import ClothArmor, LeatherArmor, PlateArmor, ChainmailArmor, Shield
+from .weapons import Sword, Claymore, Mace, Dagger, Staff, ShortBow, Wand, SideKnife, Lute
 
-from dungeoncrawl.buffs import *
-from dungeoncrawl.debuffs import *
+from .buffs import *
+from .debuffs import *
 
 
 ###############

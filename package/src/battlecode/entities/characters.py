@@ -1,9 +1,9 @@
 from typing import Tuple, Union
-from dungeoncrawl.entities.equipment import GearSet
-from dungeoncrawl.entities.pawn import Pawn, Action, _action_decorator
-from dungeoncrawl.entities.effects import Effect
-from dungeoncrawl.utilities.location import Point
-from dungeoncrawl.armor import ClothArmor
+from .equipment import GearSet
+from .pawn import Pawn, Action, _action_decorator
+from .effects import Effect
+from ..utilities.location import Point
+from ..armor import ClothArmor
 
 class Character(Pawn):
     def __init__(self, name: str, symbol: str, role: str, position: Union[Point, Tuple[int, int]] = Point(0, 0), health_max: int = 100, gear: GearSet = ClothArmor()) -> None:

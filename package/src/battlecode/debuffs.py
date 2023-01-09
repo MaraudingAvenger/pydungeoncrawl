@@ -1,7 +1,7 @@
 
 import random
-from dungeoncrawl.entities.effects import Effect
-from dungeoncrawl.utilities.location import bresenham
+from .entities.effects import Effect
+from .utilities.location import bresenham
 
 #############################
 # ~~ Training Dummy Debuff ~~#

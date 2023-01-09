@@ -3,13 +3,13 @@ import random
 
 from IPython.display import clear_output
 
-from dungeoncrawl.entities.board import Board
-from dungeoncrawl.entities.characters import Party
-from dungeoncrawl.entities.pawn import Pawn
+from .entities.board import Board
+from .entities.characters import Party
+from .entities.pawn import Pawn
 
-from dungeoncrawl.utilities.location import Point
+from .utilities.location import Point
 
-from dungeoncrawl.bosses import Boss
+from .bosses import Boss
 
 class Level:
     board: Board

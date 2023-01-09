@@ -37,12 +37,12 @@
 #
 
 from typing import Union
-from dungeoncrawl.entities.characters import Party
-from dungeoncrawl.entities.pawn import Pawn
-from dungeoncrawl.entities.effects import Effect
+from .entities.characters import Party
+from .entities.pawn import Pawn
+from .entities.effects import Effect
 
-from dungeoncrawl.bosses import Boss
-from dungeoncrawl.debuffs import ExposeWeakness
+from .bosses import Boss
+from .debuffs import ExposeWeakness
 
 
 class Parry(Effect):

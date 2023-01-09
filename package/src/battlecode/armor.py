@@ -1,4 +1,6 @@
-from dungeoncrawl.entities.equipment import Gear, GearSet
+from .entities import Gear, GearSet
+
+__all__ = ['Shield', 'ClothArmor', 'LeatherArmor', 'ChainmailArmor', 'PlateArmor']
 
 class Armor(Gear):
     def __init__(self,

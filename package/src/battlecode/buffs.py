@@ -41,7 +41,6 @@ from .entities.characters import Party
 from .entities.pawn import Pawn
 from .entities.effects import Effect
 
-from .bosses import Boss
 from .debuffs import ExposeWeakness
 
 

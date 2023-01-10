@@ -7,7 +7,7 @@ from .entities.monster import Monster
 from .entities.pawn import Pawn, _action_decorator
 from .entities.characters import Party
 
-from .utilities import Point, distance_between
+from .utilities.location import Point, distance_between
 
 from .debuffs import Curse, Embarassed
 from .weapons import Dagger, Sword

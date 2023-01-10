@@ -1,7 +1,18 @@
 import time
 import random
+import os
+import sys
 
-from IPython.display import clear_output
+try:
+    from IPython.display import clear_output
+except ModuleNotFoundError:
+    print("IPython not found, defaulting to system clear-screen command to clear output.",
+    "This causes the game to flicker in most cases; for the best experience use Jupyter Notebook or Jupyter Lab.", file=sys.stderr)
+    def clear_output(wait: bool=False):
+        if not wait:
+            os.system('cls' if os.name == 'nt' else 'clear')
+        else:
+            sys.stdout.write('\b'*5000)
 
 from .entities.board import Board
 from .entities.characters import Party

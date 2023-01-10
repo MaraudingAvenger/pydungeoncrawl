@@ -1,4 +1,4 @@
-from .entities import Gear, GearSet
+from .entities.equipment import Gear, GearSet
 
 __all__ = ['Shield', 'ClothArmor', 'LeatherArmor', 'ChainmailArmor', 'PlateArmor']
 

@@ -1,4 +1,4 @@
-from .entities import Gear
+from .entities.equipment import Gear
 
 class Mace(Gear):
     def __init__(self) -> None:

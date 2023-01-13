@@ -1,0 +1,2 @@
+include src/battlecode/utilities/base_maps/*.json
+global-exclude *.py[cod]

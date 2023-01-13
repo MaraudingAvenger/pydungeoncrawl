@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -17,11 +17,17 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License (GPL)",
     "Operating System :: OS Independent",
     "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Games/Entertainment :: Board Games",
     "Topic :: Games/Entertainment :: Puzzle Games",
     "Topic :: Games/Entertainment :: Turn Based Strategy"
 ]
+
+[project.optional-dependencies]
+notebook = ["jupyterlab", "IPython"]
 
 [project.urls]
 "Homepage" = "https://github.com/MaraudingAvenger/pydungeoncrawl"

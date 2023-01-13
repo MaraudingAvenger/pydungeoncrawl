@@ -52,7 +52,7 @@ def square_to_dict(s: Square) -> Dict[str,Any]:
     }
 
 def json_to_board(json_str: str) -> Board:
-    squares = json.loads(json_str, encoding='utf8')
+    squares = json.loads(json_str)
     grid = []
     for _ in range(len(squares)):
         grid.append([])

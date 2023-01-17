@@ -128,10 +128,11 @@ class Reflect(Effect):
 class ShieldStance(Effect):
     def __init__(self, user: Pawn) -> None:
         super().__init__(name="Shield Stance", duration=3, category={
-            'physical', 'buff', 'shield stance', 'shield', 'defense', 'defensive', 'damage_activate'}, symbol='🔰')
+            'physical', 'buff', 'shield stance', 'shield', 'defense', 'defensive', 'damage_activate'}, symbol='🔰', 
+            take_bonus_damage_percent=-.75)
         self.user = user
         self.user.reports['shield stance'] = 0
-
+        
     def on_activate(self, *args, **kwargs) -> None:
         self.user.reports['shield stance'] += 1
 

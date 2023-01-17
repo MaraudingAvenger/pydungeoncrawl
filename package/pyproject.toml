@@ -27,7 +27,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-notebook = ["jupyterlab", "IPython"]
+notebook = ["jupyter", "IPython"]
 
 [project.urls]
 "Homepage" = "https://github.com/MaraudingAvenger/pydungeoncrawl"

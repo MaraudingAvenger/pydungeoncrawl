@@ -124,6 +124,22 @@ class Board:
     # ~~ Getters, Distance Calculations, and Convenience Methods ~~ #
     #################################################################
 
+    def dangerous_points(self) -> list[Point]:
+        "get a list of points that are dangerous"
+        return [square.position for row in self.grid for square in row if square.is_burning or square.is_lava]
+
+    def dangerous_positions(self) -> list[Tuple[int, int]]:
+        "get a list of positions that are dangerous"
+        return [square.position.to_tuple() for row in self.grid for square in row if square.is_burning or square.is_lava]
+
+    def impassable_points(self) -> list[Point]:
+        "get a list of points that are impassable"
+        return [square.position for row in self.grid for square in row if square.impassable]
+
+    def impassable_positions(self) -> list[Tuple[int, int]]:
+        "get a list of positions that are impassable"
+        return [square.position.to_tuple() for row in self.grid for square in row if square.impassable]
+
     def get_squares_at_points(self, *points: Point) -> list[Square]:
         "get a list of squares at the provided points"
         return list(filter(None, [self.at(point) for point in points]))

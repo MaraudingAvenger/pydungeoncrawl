@@ -7,9 +7,9 @@ from .entities.monster import Monster
 from .entities.pawn import Pawn, _action_decorator
 from .entities.characters import Party
 
-from .utilities.location import Point, distance_between
+from .utilities.location import Point, distance_between, bresenham
 
-from .debuffs import Curse, Embarassed
+from .debuffs import Curse, Embarrassed
 from .weapons import Dagger, Sword
 
 class Boss(Monster, abc.ABC):
@@ -75,9 +75,9 @@ class Boss(Monster, abc.ABC):
 # ~~ TEST BOSS ~~ #
 ###################
 
-class DummyBoss(Boss):
+class Golem(Boss):
     def __init__(self):
-        name="Dummy Boss"
+        name="Thunk"
         position=Point(0, 0)
         health_max=20000
         super().__init__(name=name, position=position, health_max=health_max)
@@ -126,16 +126,17 @@ class TrainingDummy(Boss):
 
     @_action_decorator(cooldown=2, melee=False, affected_by_blind=False) # type: ignore
     def shout_at(self, target: Pawn):
-        target._add_effect(Embarassed())
+        target._add_effect(Embarrassed())
 
     @_action_decorator(cooldown=3, melee=False, affected_by_blind=False) # type: ignore
     def make_a_ruckus(self, party: Party):
         for pawn in party.members:
-            self.shout_at(pawn)
+            pawn._add_effect(Embarrassed())
 
     def _tick_logic(self, party: Party, board: Board):
         target = self.get_target(party)
-        if self.is_on_cooldown("shout at"):
+        self.face(target)
+        if not self.is_on_cooldown("make a ruckus"):
             self.make_a_ruckus(party)
         else:
             self.shout_at(target)

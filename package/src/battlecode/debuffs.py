@@ -8,12 +8,12 @@ from .utilities.location import bresenham
 #############################
 
 
-class Embarassed(Effect):
+class Embarrassed(Effect):
     def __init__(self) -> None:
         super().__init__(
-            name="Embarassed",
+            name="Embarrassed",
             duration=3,
-            category={'embarassed', 'debuff', 'spirit', 'spiritual', 'mental', 'curable'},
+            category={'embarrassed', 'debuff', 'spirit', 'spiritual', 'mental', 'curable'},
             description=f'The training dummy shouted, "{self.get_random_insult()}"',
             symbol='✨')
 

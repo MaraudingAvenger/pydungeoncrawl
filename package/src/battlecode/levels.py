@@ -7,10 +7,14 @@ from .utilities.map_making import get_map
 
 class BlankLevel(Level):
     def __init__(self, party: Party, boss: Boss, board: Board, show_board: bool=True, tick_speed: float=0.25) -> None:
-        super().__init__(board, party, boss, show_board=show_board, tick_speed=tick_speed)
+        super().__init__(board=board, party=party, boss=boss, show_board=show_board, tick_speed=tick_speed)
 
 class MovementTraining(Level):
-    def __init__(self, party: Party, show_board: bool=True, tick_speed: float=0.25) -> None:
-        boss = TrainingDummy()
+    def __init__(self, party: Party, boss:Boss, show_board: bool=True, tick_speed: float=0.25) -> None:
         board = get_map('simple_map.json')
-        super().__init__(board, party, boss, show_board=show_board, tick_speed=tick_speed)
+        super().__init__(board=board, party=party, boss=boss, show_board=show_board, tick_speed=tick_speed)
+
+class ForestPath(Level):
+    def __init__(self, party: Party, boss:Boss, show_board: bool=True, tick_speed: float=0.25) -> None:
+        board = get_map('forest_path.json')
+        super().__init__(board=board, party=party, boss=boss, show_board=show_board, tick_speed=tick_speed)

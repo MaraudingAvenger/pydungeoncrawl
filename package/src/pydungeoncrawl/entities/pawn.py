@@ -63,7 +63,7 @@ def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, aff
                 reason = f"{self.name} is stunned!"
             elif self.acted_this_turn:
                 reason = f"{self.name} has already acted this turn!"
-            elif self.ability_cooldowns.get(clean_name(func.__name__), 0) > 0:
+            elif self._ability_cooldowns.get(clean_name(func.__name__), 0) > 0:
                 reason = f"{clean_name(func.__name__)} is on cooldown!"
             elif affected_by_root and self.effects.rooted:
                 reason = f"{self.name} is rooted!"
@@ -86,8 +86,8 @@ def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, aff
                 )
                 return
 
-            if self.ability_cooldowns.get(clean_name(func.__name__), 0) == 0:
-                self.ability_cooldowns[clean_name(func.__name__)] = cooldown
+            if self._ability_cooldowns.get(clean_name(func.__name__), 0) == 0:
+                self._ability_cooldowns[clean_name(func.__name__)] = cooldown
             self.acted_this_turn = True
 
             self.current_action = Action(
@@ -132,7 +132,7 @@ class Pawn(_Character):
         self._is_already_dead: bool = False
         self._was_hit: bool = False
         self.current_action: Union[Action, None] = None
-        self.ability_cooldowns = {}
+        self._ability_cooldowns = {}
 
         # effects
         self.equipment = Equipment()
@@ -210,7 +210,7 @@ class Pawn(_Character):
     @property
     def cooldowns(self) -> dict[str,int]:
         return {name : cooldown
-                for name, cooldown in self.ability_cooldowns.items()
+                for name, cooldown in self._ability_cooldowns.items()
                 if cooldown > 0}
 
     def is_on_cooldown(self, ability_name: str) -> bool:
@@ -218,14 +218,14 @@ class Pawn(_Character):
         Checks the cooldowns for the name of an ability.
         Returns True if the ability is on cooldown.
         '''
-        return self.ability_cooldowns.get(clean_name(ability_name), 0) > 0
+        return self._ability_cooldowns.get(clean_name(ability_name), 0) > 0
 
     def get_cooldown(self, ability_name: str) -> int:
         '''
         Get the cooldown for an ability.
         Returns 0 if the ability is not on cooldown.
         '''
-        return self.ability_cooldowns.get(clean_name(ability_name), 0)
+        return self._ability_cooldowns.get(clean_name(ability_name), 0)
 
     @property
     def health(self):
@@ -255,33 +255,20 @@ class Pawn(_Character):
     # ~~~ Measurements ~~~ #
     ########################
 
-    @singledispatchmethod
-    def distance_to(self, other: 'Pawn') -> float:
+    def distance_to(self, other: Union['Pawn', _Character, Point, tuple]) -> float:
         '''
         Get the distance between this character and another character or a board square.
         '''
-        return distance_between(self.position, other.position)
+        if hasattr(other, 'position'):
+            return distance_between(self.position, other.position) # type: ignore
+        elif isinstance(other, Point):
+            return distance_between(self.position, other)
+        elif isinstance(other, tuple):
+            return distance_between(self.position, Point(*other))
+        raise TypeError(f"Cannot calculate distance to {other} of type {type(other)}")
 
-    @distance_to.register
-    def _(self, other: Point) -> float:
-        return distance_between(self.position, other)
-
-    @distance_to.register
-    def _(self, x: int, y: int) -> float:
-        return distance_between(self.position, Point(x, y))
-
-    @singledispatchmethod
-    def distance_from(self, other: _Character) -> float:
-        return self.distance_to(other)
-
-    @distance_from.register
-    def _(self, other: Point) -> float:
-        return self.distance_to(other)
-
-    @distance_from.register
-    def _(self, x: int, y: int) -> float:
-        return self.distance_to(x, y)
-
+    def distance_from(self, other: Union['Pawn', _Character, Point, tuple]) -> float:
+        return self.distance_to(other) # type: ignore
 
     def is_behind(self, other: 'Pawn') -> bool:
         return other.position in self.points_behind
@@ -294,11 +281,18 @@ class Pawn(_Character):
             return self.move_toward(destination)
 
     @_check_can_move
-    def move_toward(self, target: Union[Point, _Character]) -> None:
-        "my bum is on the cheese"
+    def move_toward(self, target: Union[Point, _Character, tuple]) -> None:
+        """
+        Move one square in a straight line toward the provided Pawn or Point (x,y) tuple,
+        as calculated using Bresenham's algorithm. Does not take into account impassible
+        or dangerous terrain -- that is, using this movement method, the pawn might
+        attempt to move into a wall and fail the move. Example:
+        `hero.move_toward( boss )` or `hero.move_toward( Point(5, 5) )`"""
         if not self._is_dead:
             if isinstance(target, _Character):
                 target = target.position
+            elif isinstance(target, tuple):
+                target = Point(*target)
 
             if self.distance_from(target) > 1.5:
                 path = bresenham(self.position, target)
@@ -315,7 +309,7 @@ class Pawn(_Character):
     @singledispatchmethod
     def _teleport(self, x: int, y: int) -> None:
         self.move_history.append(Point(x, y))
-        if self.distance_from(x, y) > 1.5:
+        if self.distance_from((x, y)) > 1.5:
             self.position = Point(x, y)
             return
         self.facing_direction = Point(
@@ -474,12 +468,12 @@ class Pawn(_Character):
         # trigger vulnerabilities
         if damage_type == "magic":
             increase = sum(
-                [effect.take_bonus_damage_percent for effect in self.effects.find_effect_text(f'magic vuln')])
+                [effect.take_bonus_damage_percent for effect in self.effects.find_effect_text('magic vulnerability')])
             damage += int(round(increase * damage))
-            self.effects.remove_name(f'magic vulnerabilty')
+            self.effects.remove_name('magic vulnerability')
 
         elif damage_type == "poison":
-            if self.effects.find_effect_text(f'poison vulnerability'):
+            if self.effects.find_effect_text('poison vulnerability'):
                 damage *= 2
 
         dam_reduce = sum([effect.take_bonus_damage_percent for effect in self.effects.get_any_category_name('modifier')]) # buff/debuffs that affect damage taken on self
@@ -626,8 +620,8 @@ class Pawn(_Character):
             self._tick_damage(effect)
 
         # TODO: magic vulnerability from fire + frost vuln pair
-        frost = self.effects.find_effect_text('frost vulnerability')
-        fire = self.effects.find_effect_text('fire vulnerability')
+        frost = self.effects.find_effect_text('frost resistance')
+        fire = self.effects.find_effect_text('fire resistance')
         if frost and fire:
             for ice_effect, fire_effect in zip(frost, fire):
                 self.effects.add(MagicVulnerability())
@@ -642,10 +636,10 @@ class Pawn(_Character):
         self.effects._tick()  # updates durations and removes expired effects
 
         # decrement ability cooldowns
-        if self.ability_cooldowns:
-            for name, cooldown in self.ability_cooldowns.items():
+        if self._ability_cooldowns:
+            for name, cooldown in self._ability_cooldowns.items():
                 if cooldown > 0:
-                    self.ability_cooldowns[name] -= 1
+                    self._ability_cooldowns[name] -= 1
 
         # reset action flags
         self.acted_this_turn = False

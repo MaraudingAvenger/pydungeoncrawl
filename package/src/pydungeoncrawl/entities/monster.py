@@ -14,6 +14,7 @@ class Monster(Pawn):
         super().__init__(name=name, position=position, health_max=health_max, symbol=symbol)
         self.effects = Effects()
         self.health = self.health_max
+        self.telegraph: Union[str,None] = None
 
     def _get_target(self, party: Party) -> Pawn:
         '''Get the target to attack. Tank -> DPS -> Healer.'''

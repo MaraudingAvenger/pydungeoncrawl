@@ -1,6 +1,6 @@
 import abc
 import heapq
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 from .entities.board import Board
 from .entities.monster import Monster
@@ -10,7 +10,7 @@ from .entities.characters import Party
 from .utilities.location import Point, distance_between, bresenham
 
 from .debuffs import Curse, Embarrassed
-from .weapons import Dagger, Sword
+from .weapons import Claymore, Dagger, Sword
 
 class Boss(Monster, abc.ABC):
     @abc.abstractmethod
@@ -76,6 +76,9 @@ class Boss(Monster, abc.ABC):
 ###################
 
 class Golem(Boss):
+    '''
+    The Golem is the 
+    '''
     def __init__(self):
         name="Thunk"
         position=Point(0, 0)
@@ -86,17 +89,22 @@ class Golem(Boss):
         return self._get_target(party)
 
     def _tick_logic(self, party: Party, board: Board):
-        target = self._get_target(party)
+        target = self.get_target(party)
 
+        # Telegraphing
+        if self._ability_cooldowns.get('Aoe', 0) == 1:
+            self.telegraph = "I'm going to attack EVERYONE next turn!"
+
+        # Combat logic
         if distance_between(self.position, target.position) > 1.5:
             path = self._astar(board=board, start=self.position, goal=target.position)
             if path is not None:
                 self.move(path[0])
         else:
-            if self.is_on_cooldown("Attack"):
-                self.aoe(party)
-            else:
+            if self.is_on_cooldown("aoe"):
                 self.attack(target)
+            else:
+                self.aoe(party)
 
     @_action_decorator(cooldown=2, melee=True) # type: ignore
     def attack(self, target: Pawn):
@@ -135,6 +143,9 @@ class TrainingDummy(Boss):
 
     def _tick_logic(self, party: Party, board: Board):
         target = self.get_target(party)
+
+        self.telegraph = f"I'm going to insult the closest person!"
+
         self.face(target)
         if not self.is_on_cooldown("make a ruckus"):
             self.make_a_ruckus(party)
@@ -217,6 +228,53 @@ class KoboldQueen(Boss):
                 self.curse(party)
             else:
                 self.savage_strike(target)
+
+    @_action_decorator(melee=True) # type: ignore
+    def savage_strike(self, target: Pawn):
+        target._take_damage(self, 60, "physical")
+
+    @_action_decorator(cooldown=10) # type: ignore
+    def curse(self, party: Party):
+        for pawn in list(party.dps) + [party.healer]:
+            pawn.effects.add(Curse(caster=self, target=pawn, duration=8, dot_amount=self.calculate_damage(3, pawn)))
+
+class KoboldGoddess(Boss):
+    def __init__(self):
+        name="Kobold Goddess"
+        position=Point(0, 0)
+        health_max=20000
+        super().__init__(name=name, position=position, health_max=health_max)
+        self.equip(Claymore())
+
+        self.last_party_positions : List = [] # #<== Death touch mechanic property
+
+    def get_target(self, party: Party) -> Pawn:
+        return self._get_target(party)
+
+    def _tick_logic(self, party: Party, board: Board):
+        target = self._get_target(party)
+
+        if self._turn and self._turn % 5 == 0:
+            self.last_party_positions = [p.position for p in party]
+            self.telegraph = "I'm going to devour your souls if you don't move next turn!!!"
+        elif self.telegraph:
+            self.devour_souls(party)
+        elif distance_between(self.position, target.position) > 1.5:
+            path = self._astar(board=board, start=self.position, goal=target.position)
+            if path is not None:
+                self.move(path[0])
+        else:
+            if not self.is_on_cooldown("Curse"):
+                self.curse(party)
+            else:
+                self.savage_strike(target)
+
+    @_action_decorator(affected_by_blind=False) # type: ignore
+    def devour_souls(self, party: Party):
+        for p in party:
+            if p.position in self.last_party_positions:
+                p._take_damage(self, 666, "physical")
+        self.telegraph = None
 
     @_action_decorator(melee=True) # type: ignore
     def savage_strike(self, target: Pawn):

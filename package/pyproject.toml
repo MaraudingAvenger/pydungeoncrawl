@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "battlecode"
+name = "pydungeoncrawl"
 version = "0.1.0"
 authors = [
   { name="Luke Chambers", email="marauding.avenger@gmail.com" },

@@ -1,2 +1,2 @@
-include src/battlecode/utilities/base_maps/*.json
+include src/pydungeoncrawl/utilities/base_maps/*.json
 global-exclude *.py[cod]

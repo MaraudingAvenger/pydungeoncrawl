@@ -20,8 +20,7 @@ from .debuffs import *
 class Guardian(Character):
     def __init__(self, name: str) -> None:
         '''
-        The Guardian is a tanky character that can take a lot of damage, but he isn't
-        very good at dealing damage himself.
+        The Guardian class can take a lot of damage, but isn't very good at dealing damage itself.
         '''
         symbol: str = '🛡️'
         role: str='tank'
@@ -42,7 +41,7 @@ class Guardian(Character):
     def shield_stance(self) -> None:
         """
         Take on a defensive stance reducing damage you receive by 75% for 3 turns.
-        However, the Guardian cannot take any action during this time. At the end you
+        You are unable to take any action during this time. At the end you
         will receive 5 stacks of Toughness for each hit taken.
         """
         self.effects.add(Stun(3))
@@ -77,6 +76,10 @@ class Guardian(Character):
 
 class Paladin(Character):
     def __init__(self, name: str) -> None:
+        '''
+        Powerful holy warrior that strikes a balance between offense and defense.
+        
+        '''
         symbol: str = '⚜️'
         role: str='tank'
         position: Union[Point,Tuple[int,int]] = Point(0, 0)
@@ -190,11 +193,7 @@ class Berzerker(Character):
 
 class Cleric(Character):
     '''
-    Healing Word (Heal) – Instantly Heal the target for 50% health + stat modifier 
-    Jolt (Magic, Debuff) – Apply Stun on the target for 2 turns. 3 turns if the target has Magic Vulnerability 
-    Smite (Damage, Spirit, Debuff) – Smite the target and apply 1 stack of Frailty. Damage absorbed by Group Barrier is added and triggers 5 additional stacks of Frailty. 
-    Cleanse (Cure) – Casts Cure on Target 
-    Group Barrier (Barrier) – Barrier that absorbs 100% of damage received for 4 turns. All damage absorbed is used to empower your next Smite.
+    A dedicated healer that can heal and cleanse the party of debuffs. 
     '''
 
     def __init__(self, name: str) -> None:
@@ -362,7 +361,7 @@ class Ranger(Character):
 
     @_action_decorator(cooldown=5, melee=False, affected_by_blind=True) #type: ignore
     def virulent_arrow(self, target: Pawn) -> None:
-        self.reports['shots'] = 0
+        self.reports['shots'] += 1
         if not target.poisoned:
             target.effects.add(PoisonVulnerability(3))
         target.effects.add(Poison(target, duration=3, dot_amount=5))
@@ -370,7 +369,7 @@ class Ranger(Character):
 
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=True) #type: ignore
     def frostfire_arrow(self, target: Pawn) -> None:
-        self.reports['shots'] = 0
+        self.reports['shots'] += 1
         if not target.has_effect(FireResistance()) and not target.has_effect(FrostResistance()):
             target.effects.add_stacks(MagicVulnerability, stacks=3)
         target._take_damage(self, self.calculate_damage(10, target), "physical")
@@ -448,7 +447,7 @@ class Rogue(Character):
 
         dmg = self.calculate_damage(40, target)
         if self.is_behind(target):
-            dmg *= 2
+            dmg *= 10
             self.reports['backstab'] += 1
             if self.reports['backstab'] >= 3:
                 target.effects.add_stacks(ExposeWeakness, stacks=2, duration=3)
@@ -537,21 +536,21 @@ class Wizard(Character):
         '''
         dmg = self.calculate_damage(20, target)
         if target.effects.vulnerable_to('magic'):
-            dmg *= 1.5
+            dmg = self.calculate_damage(100, target)
             target.effects.add(Stun(1))
-        target._take_damage(self, math.ceil(dmg), "magic")
+        target._take_damage(self, dmg, "magic")
 
     @_action_decorator(cooldown=10, melee=False) #type: ignore
     def fire_bolt(self, target: Pawn) -> None:
         'Blast the target with a ball of Fire and apply 2 stacks of Fire Resistance.'
-        target._take_damage(self, self.calculate_damage(20, target), "fire")
-        target.effects.add_stacks(FireResistance, stacks=2)
+        target._take_damage(self, self.calculate_damage(50, target), "fire")
+        target.effects.add_stacks(FireResistance, stacks=5)
 
     @_action_decorator(cooldown=10, melee=False) #type: ignore
     def frost_bolt(self, target: Pawn) -> None:
         'Blast the target with a ball of Frost and apply 2 stacks of Frost Resistance.'
-        target._take_damage(self, self.calculate_damage(20, target), "frost")
-        target.effects.add_stacks(FrostResistance, stacks=2)
+        target._take_damage(self, self.calculate_damage(50, target), "frost")
+        target.effects.add_stacks(FrostResistance, stacks=5)
 
     @_action_decorator(cooldown=10, melee=False) #type: ignore
     def teleport(self, target: Pawn, location: Union[Point,Tuple[int,int]]) -> None:
@@ -566,9 +565,9 @@ class Wizard(Character):
         has Magic Vulnerability this deals double damage, applies Stun, and
         5 stacks of Magic Vulnerability on the target for 3 turns.
         '''
-        dmg = self.calculate_damage(50, target)
+        dmg = self.calculate_damage(100, target)
         if target.effects.vulnerable_to('magic'):
-            dmg *= 2
+            dmg *= 10
             target.effects.add(Stun(3))
             target._take_damage(self, dmg, "magic")
             target.effects.add_stacks(MagicVulnerability, stacks=5)

@@ -2,6 +2,7 @@
 _old/
 .vscode/
 *.ipynb
+*.tiff
 
 ##### Preconfigured Gitignore Stuff
 # Byte-compiled / optimized / DLL files

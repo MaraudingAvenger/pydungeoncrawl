@@ -53,7 +53,6 @@ class Parry(Effect):
         self.user.effects.remove_name("expose weakness")
 
     def on_activate(self, *args, **kwargs) -> None:
-        print('Parry activated'* 50)
         if isinstance((damager := kwargs.get('damager')), Pawn) and kwargs.get("total_damage", 0) > 0:
             self.duration = 0
             self.user.effects.add_stacks(Toughness, stacks=2, duration=3)

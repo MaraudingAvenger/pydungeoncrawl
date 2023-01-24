@@ -10,7 +10,6 @@ class Character(Pawn):
         super().__init__(name, position, health_max, symbol, gear=gear)
         self.name = name
         self.role = role
-        self.ability_cooldowns: dict[str, int] = {}
 
     @property
     def last_action(self) -> Action | None:
@@ -126,10 +125,11 @@ class Party:
         return iter(self.members)
 
     def __getitem__(self, key):
-        return [member
+        attr = [member
                 for member in self.members
                 if member.name.lower() == key.lower()
-                or key.lower() in member.__class__.__name__.lower()][0]
+                or key.lower() in member.__class__.__name__.lower()]
+        return attr[0] if attr else None
 
 
 class DummyHero(Character):

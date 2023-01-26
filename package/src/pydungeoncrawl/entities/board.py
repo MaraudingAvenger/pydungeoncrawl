@@ -124,23 +124,27 @@ class Board:
     # ~~ Getters, Distance Calculations, and Convenience Methods ~~ #
     #################################################################
 
+    @property
     def dangerous_points(self) -> list[Point]:
         "get a list of points that are dangerous"
         return [square.position for row in self.grid for square in row if square.is_burning or square.is_lava]
 
+    @property
     def dangerous_positions(self) -> list[Tuple[int, int]]:
         "get a list of positions that are dangerous"
         return [square.position.to_tuple() for row in self.grid for square in row if square.is_burning or square.is_lava]
 
+    @property
     def impassable_points(self) -> list[Point]:
         "get a list of points that are impassable"
         return [square.position for row in self.grid for square in row if square.impassable]
 
+    @property
     def impassable_positions(self) -> list[Tuple[int, int]]:
         "get a list of positions that are impassable"
         return [square.position.to_tuple() for row in self.grid for square in row if square.impassable]
 
-    def get_squares_at_points(self, *points: Point) -> list[Square]:
+    def get_squares_at_points(self, *points: Union[Point,tuple[int,int]]) -> list[Square]:
         "get a list of squares at the provided points"
         return list(filter(None, [self.at(point) for point in points]))
 
@@ -154,22 +158,26 @@ class Board:
         "get a list of players in the provided squares"
         return list(filter(None, [square.occupant for square in squares if square.occupied]))
 
-    def get_players_in_range(self, origin: Point, radius: int) -> list[Pawn]:
+    def get_players_in_range(self, origin: Union[Point, tuple[int,int]], radius: int) -> list[Pawn]:
         "get a list of players in the provided radius"
         return list(filter(None,
                           [square.occupant
                           for square in self.get_squares_in_radius(origin, radius)]))
 
-    def get_squares_in_radius(self, origin: Point, radius: int) -> list[Square]:
+    def get_squares_in_radius(self, origin: Union[Point, tuple[int,int]], radius: int) -> list[Square]:
         "get a list of squares in the provided radius"
+        if isinstance(origin, tuple):
+            origin = Point(*origin)
         return list(filter(None,
                            [self.at(Point(origin.x + x, origin.y + y))
                            for x in range(-radius, radius + 1)
                            for y in range(-radius, radius + 1)
                            if (x ** 2 + y ** 2) <= radius ** 2]))
 
-    def get_adjacent_squares(self, position: Point) -> list[Square]:
+    def get_adjacent_squares(self, position: Union[Point,tuple[int,int]]) -> list[Square]:
         "get a list of adjacent squares"
+        if isinstance(position, tuple):
+            position = Point(*position)
         return list(filter(None,
                            [self.at(Point(position.x + x, position.y + y))
                            for x in [-1, 0, 1]
@@ -180,7 +188,7 @@ class Board:
         "get a list of all entities in melee range of the origin pawn"
         return self.get_players_in_squares(*self.get_adjacent_squares(origin.position))
     
-    def melee_range(self, origin: Pawn) -> list[Pawn]:
+    def get_melee_range_entities(self, origin: Pawn) -> list[Pawn]:
         "get a list of all entities in melee range of the origin pawn"
         return self.get_adjacent_entities(origin)
 
@@ -191,7 +199,7 @@ class Board:
         while player is None:
             players = self.get_players_in_range(origin.position, radius)
             if players:
-                player = min(players, key=lambda p: self.distance_between(origin, p)) # type: ignore
+                player = min(players, key=lambda p: distance_between(origin, p)) # type: ignore
             radius += 1
         return player
 
@@ -222,10 +230,6 @@ class Board:
     # TODO: need __getitem__?
     # TODO: need __setitem__?
 
-    def __getitem__(self, position: Point) -> Square | None:
+    def __getitem__(self, position: Union[Point,tuple[int,int]]) -> Square | None:
         return self.at(position)
 
-
-if __name__ == "__main__":
-    board = Board()
-    print(board)

@@ -99,3 +99,13 @@ class Lute(Gear):
             damage = 2,
             damage_type = "physical"
         )
+
+class TreeTrunk(Gear):
+    def __init__(self) -> None:
+        super().__init__(
+            category = "weapon",
+            name = "Tree Trunk",
+            description = "A large tree, torn from the earth and used as a club.",
+            damage = 20,
+            damage_type = "physical",
+        )

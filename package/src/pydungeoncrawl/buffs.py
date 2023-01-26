@@ -71,7 +71,7 @@ class Toughness(Effect):
                          category={'physical', 'buff', 'tough', 'toughness', 'defense', 'defensive', 'modifier'}, symbol='✊')
 
 class HoT(Effect):
-    def __init__(self, name: str, duration:int=3, heal_amount:int=3) -> None:
+    def __init__(self, name: str, duration:Union[int,float]=3, heal_amount:int=3) -> None:
         super().__init__(name=name, duration=duration, heal_over_time=heal_amount, category={'hot', 'buff', 'heal', 'heal over time'}, symbol='💕')
 
 class CurativeNotes(Effect):

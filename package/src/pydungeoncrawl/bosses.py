@@ -1,5 +1,7 @@
 import abc
 import heapq
+import itertools
+import random
 from typing import List, Tuple, Union
 
 from .entities.board import Board
@@ -9,8 +11,9 @@ from .entities.characters import Party
 
 from .utilities.location import Point, distance_between, bresenham
 
-from .debuffs import Curse, Embarrassed
-from .weapons import Claymore, Dagger, Sword
+from .debuffs import Curse, Embarrassed, Frailty, Stun
+from .buffs import HoT
+from .weapons import Claymore, Dagger, Sword, TreeTrunk
 
 class Boss(Monster, abc.ABC):
     @abc.abstractmethod
@@ -77,7 +80,8 @@ class Boss(Monster, abc.ABC):
 
 class Golem(Boss):
     '''
-    The Golem is the 
+    The Golem is a high-damage, implacable foe. It has a large health pool,
+    and will steadily attack the party until it is defeated.
     '''
     def __init__(self):
         name="Thunk"
@@ -284,3 +288,109 @@ class KoboldGoddess(Boss):
     def curse(self, party: Party):
         for pawn in list(party.dps) + [party.healer]:
             pawn.effects.add(Curse(caster=self, target=pawn, duration=8, dot_amount=self.calculate_damage(3, pawn)))
+
+
+# 
+# Savage Mountain Troll
+
+# Core Mechanic: Regenerates Health
+# Attack: Normal heavy attack against melee target.
+# cycle:
+    # Mechanic 1: Every 10 turns will attack with extreme damage that applies Stun to the target for 2 turns.
+    # Mechanic 2: (Follows Mechanic 1) Let's out a roar that applies 10 stacks of Frailty to Party for 3 turns
+    # Mechanic 3: (Follows Mechanic 2) Jumps into the air and smashes down causing heavy damage to entire Party.
+# random
+    # Mechanic 4: (Telegraphed) Throws a giant rock randomly at furthest target. Anyone at that position will receive massive damage and applies Stun for 2 turns.
+# Mechanic 5: Death charges the closest target dealing extreme damage if no target is in melee range for 2 turns (can only occur after turn 13) 
+
+class SavageMountainTroll(Boss):
+    def __init__(self):
+        name="Morgoth Trollkin"
+        position=Point(0, 0)
+        health_max=20000
+        super().__init__(name=name, position=position, health_max=health_max)
+        
+        self.equip(TreeTrunk())
+        self._add_effect(HoT(name="Trollkin Regeneration", duration=float('inf'), heal_amount=5))
+
+        self._throwing = False
+        self._was_in_melee = False
+        self._melee_turn_counter = 0
+        self._cycle_turn_counter = 0
+        self._cycling = False
+        self._action_cycle = itertools.cycle([self.crushing_attack, self.thunderous_roar, self.stomp])
+        self._last_party_positions : List[Point] = [] 
+
+    def get_target(self, party: Party) -> Pawn:
+        # get closest party member
+        return min(party.members, key=lambda p: distance_between(self.position, p.position))
+
+    def _tick_logic(self, party: Party, board: Board):
+        target = self.get_target(party)
+
+        if self._turn and self._turn % 10 == 0:
+            self._cycling = True
+
+        if self._throwing:
+            self.boulder(
+                max(self._last_party_positions, key=lambda p: distance_between(self.position, p)),
+                board)
+        
+        if self._was_in_melee and distance_between(self.position, target.position) > 1.5:
+            self._melee_turn_counter += 1
+
+        if not self.acted_this_turn:
+            if self._melee_turn_counter >= 2:
+                self.death_charge(party=party, board=board)
+
+            elif self._cycling:
+                if self._cycle_turn_counter >= 3:
+                    self._cycle_turn_counter = 0
+                    self._cycling = False
+                else:
+                    self._cycle_turn_counter += 1
+                    next(self._action_cycle)(party, target=target)
+            else:
+                self.move_toward(target)
+        
+        self._throwing = random.random() <= 0.1 # 10% chance to throw a boulder
+        if self._throwing:
+            self._last_party_positions = [p.position for p in party]
+            self.telegraph = "The savage mountain troll is about to throw a boulder at the furthest party member's position!"
+
+
+        
+
+    @_action_decorator(cooldown=10, melee=True) # type: ignore
+    def crushing_attack(self, party: Party, **kwargs):
+        target = self.get_target(party)
+        target._take_damage(self, self.calculate_damage(50, target), "physical") # high dmg due to equipped TreeTrunk
+        self._was_in_melee = True
+    
+    @_action_decorator(cooldown=10, melee=False, affected_by_blind=False) # type: ignore
+    def thunderous_roar(self, party: Party, **kwargs):
+        for pawn in party:
+            pawn.effects.add_stacks(Frailty, stacks=10, duration=3)
+    
+    @_action_decorator(cooldown=10, melee=False, affected_by_blind=True, affected_by_root=True) # type: ignore
+    def stomp(self, party: Party, **kwargs):
+        for pawn in list(party.dps) + [party.healer]:
+            pawn._take_damage(self, self.calculate_damage(40, pawn), "physical")
+    
+    @_action_decorator(cooldown=10, melee=False, affected_by_blind=True, affected_by_root=False) # type: ignore
+    def boulder(self, point: Point, board: Board,):
+        target = board.at(point)
+        if target and target.occupant:
+            target.occupant._take_damage(self, self.calculate_damage(40, target.occupant), "physical")
+            target.occupant.effects.add(Stun(duration=2))
+    
+    @_action_decorator(cooldown=1, melee=False, affected_by_blind=True, affected_by_root=True) # type: ignore
+    def death_charge(self, party: Party, board: Board):
+        target = self.get_target(party)
+        if distance_between(self.position, target.position) > 1.5:
+            path = self._astar(board=board, start=self.position, goal=target.position)
+            if path is not None:
+                self._teleport(path[-2])
+        target._take_damage(self, self.calculate_damage(100, target), "physical")
+        self._was_in_melee = True
+        self._melee_turn_counter = 0

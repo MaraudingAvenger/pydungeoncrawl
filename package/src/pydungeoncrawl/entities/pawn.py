@@ -41,7 +41,7 @@ def _check_can_move(func):
                 type='move',
                 action_name=func.__name__,
                 actor=self,
-                target=kwargs.get('target', args[0]),
+                target=kwargs.get('target', args[0] if args else None),
                 failed=True,
                 failed_reason=reason
             )
@@ -99,7 +99,7 @@ def _action_decorator(_func=None, *, cooldown: int = 1, melee: bool = False, aff
             )
             self.action_history.append(self.current_action)
             if target != self:
-                self.face(target.position)
+                self.face(target if not hasattr(target, 'position') else target.position)
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -306,79 +306,75 @@ class Pawn(_Character):
                     target.y+(add[1])
                 ))
 
-    @singledispatchmethod
-    def _teleport(self, x: int, y: int) -> None:
-        self.move_history.append(Point(x, y))
-        if self.distance_from((x, y)) > 1.5:
-            self.position = Point(x, y)
+    def _teleport(self, point: Union[Point,tuple[int,int]]) -> None:
+        if hasattr(point, 'position'):
+            point = point.position # type: ignore
+        elif isinstance(point, tuple):
+            point = Point(*point)
+
+        self.move_history.append(point) # type: ignore
+        if self.distance_from(point) > 1.5:
+            self.position = point
             return
         self.facing_direction = Point(
-            x+(x-self.position.x), y+(y-self.position.y))
-        self.position = Point(x, y)
+            point.x+(point.x-self.position.x), point.y+(point.y-self.position.y)) # type: ignore
+        self.position = point
 
-    @_teleport.register
-    def _(self, point: Point) -> None:
-        self._teleport(point.x, point.y)
-
-    @singledispatchmethod
-    def face(self, target: _Character) -> None:
-        self.facing_direction = next(bresenham(self.position, target.position))
-
-    @face.register
-    def _(self, target: Point) -> None:
-        self.facing_direction = next(bresenham(self.position, target))
-
-    @face.register
-    def _(self, x: int, y: int) -> None:
-        self.facing_direction = next(bresenham(self.position, Point(x, y)))
+    def face(self, target: Union[_Character,Point,tuple[int,int]]) -> None:
+        if hasattr(target, 'position'):
+            self.facing_direction = next(bresenham(self.position, target.position)) # type: ignore
+        elif isinstance(target, tuple):
+            self.facing_direction = next(bresenham(self.position, Point(*target)))
+        else:
+            self.facing_direction = next(bresenham(self.position, target)) # type: ignore
 
     @_check_can_move
     def move_up(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x, self.position.y+1)
-            self.face(self.position.x, self.position.y+1)
+            self.face((self.position.x, self.position.y+1))
 
     @_check_can_move
     def move_left(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x-1, self.position.y)
-            self.face(self.position.x-1, self.position.y)
+            self.face((self.position.x-1, self.position.y))
 
     @_check_can_move
     def move_right(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x+1, self.position.y)
-            self.face(self.position.x+1, self.position.y)
+            self.face((self.position.x+1, self.position.y))
 
     @_check_can_move
     def move_down(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x, self.position.y-1)
-            self.face(self.position.x, self.position.y-1)
+            self.face((self.position.x, self.position.y-1))
 
     @_check_can_move
     def move_down_right(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x+1, self.position.y-1)
-            self.face(self.position.x+1, self.position.y-1)
+            self.face((self.position.x+1, self.position.y-1))
 
     @_check_can_move
     def move_up_right(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x+1, self.position.y+1)
-            self.face(self.position.x+1, self.position.y+1)
+            self.face((self.position.x+1, self.position.y+1))
 
     @_check_can_move
     def move_down_left(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x-1, self.position.y-1)
-            self.face(self.position.x-1, self.position.y-1)
+            self.face((self.position.x-1, self.position.y-1))
 
     @_check_can_move
     def move_up_left(self) -> None:
         if not self._is_dead:
             self.position = Point(self.position.x-1, self.position.y+1)
-            self.face(self.position.x-1, self.position.y+1)
+            self.face((self.position.x-1, self.position.y+1))
 
     ##################
     # ~~~ Combat ~~~ #

@@ -88,7 +88,12 @@ def angle_behind(x1, y1, x2, y2):
 def _(location: Point, facing: Point):
     return angle_behind(location.x, location.y, facing.x, facing.y)
 
-def bresenham(origin: Point, destination: Point) -> Generator[Point, None, None]:
+def bresenham(origin: Union[Point, tuple[int,int]], destination: Union[Point, tuple[int,int]]) -> Generator[Point, None, None]:
+    "Bresenham's Line Algorithm"
+    if isinstance(origin, tuple):
+        origin = Point(*origin)
+    if isinstance(destination, tuple):
+        destination = Point(*destination)
     x1, y1 = origin.x, origin.y
     x2, y2 = destination.x, destination.y
     dx = abs(x2 - x1)

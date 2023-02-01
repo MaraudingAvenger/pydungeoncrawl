@@ -365,7 +365,7 @@ class SavageMountainTroll(Boss):
     @_action_decorator(cooldown=10, melee=True) # type: ignore
     def decimate(self, party: Party, **kwargs):
         target = self.get_target(party)
-        target._take_damage(self, self.calculate_damage(80, target), "physical") # high dmg due to equipped TreeTrunk
+        target._take_damage(self, self.calculate_damage(90, target), "physical") # high dmg due to equipped TreeTrunk
         self._was_in_melee = True
     
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=False) # type: ignore
@@ -375,15 +375,15 @@ class SavageMountainTroll(Boss):
     
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=True, affected_by_root=True) # type: ignore
     def colossal_smash(self, party: Party, **kwargs):
-        for pawn in list(party.dps) + [party.healer]:
-            pawn._take_damage(self, self.calculate_damage(40, pawn), "physical")
+        for pawn in party:
+            pawn._take_damage(self, self.calculate_damage(60, pawn), "physical")
     
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=True, affected_by_root=False) # type: ignore
     def throw_boulder(self, point: Point, party: Party):
         unlucky = list(filter(lambda target: target.position == point, party.members))
         if unlucky:
             target = unlucky[0]
-            target._take_damage(self, self.calculate_damage(40, target), "physical")
+            target._take_damage(self, self.calculate_damage(150, target), "physical")
             target.effects.add(Stun(duration=2))
     
     @_action_decorator(cooldown=1, melee=False, affected_by_blind=True, affected_by_root=True) # type: ignore
@@ -393,6 +393,6 @@ class SavageMountainTroll(Boss):
             path = self._astar(board=board, start=self.position, goal=target.position)
             if path is not None:
                 self._teleport(path[-2])
-        target._take_damage(self, self.calculate_damage(100, target), "physical")
+        target._take_damage(self, self.calculate_damage(1000, target), "physical")
         self._was_in_melee = True
         self._melee_turn_counter = 0

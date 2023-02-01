@@ -107,9 +107,11 @@ class Board:
 
     def at(self, position: Union[Point, Tuple[int, int]]) -> Square | None:
         "get square at position (x, y)"
+
         if isinstance(position, tuple):
             position = Point(position[0], position[1])
-        if 0 > position.x >= len(self.grid[0]) or 0 > position.y >= len(self.grid):
+
+        if (0 > position.x >= len(self.grid[0])) or (0 > position.y >= len(self.grid)):
             return None
         return self.grid[position.y][position.x]
 
@@ -226,9 +228,6 @@ class Board:
             s += "\n"
 
         return s
-
-    # TODO: need __getitem__?
-    # TODO: need __setitem__?
 
     def __getitem__(self, position: Union[Point,tuple[int,int]]) -> Square | None:
         return self.at(position)

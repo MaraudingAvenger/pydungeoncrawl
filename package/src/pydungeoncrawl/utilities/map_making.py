@@ -1,7 +1,6 @@
 import json
 import copy
 from typing import Any, Dict, List
-from PIL import Image
 
 try:
     import importlib.resources as resources
@@ -65,6 +64,8 @@ def json_to_board(json_str: str) -> Board:
 
 
 def tiff_to_dict(read_loc: str, save: bool=False, save_loc: str='') -> List[Dict]:
+    from PIL import Image
+
     im = Image.open(read_loc, 'r')
     width, height = im.size
     picture = im.load()

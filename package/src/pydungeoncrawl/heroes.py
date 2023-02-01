@@ -179,7 +179,7 @@ class Berzerker(Character):
     def parry(self) -> None:
         self.effects.add(Parry(user=self, duration=1))
 
-    @_action_decorator(cooldown=10, affected_by_blind=False) # type: ignore
+    @_action_decorator(cooldown=100, affected_by_blind=False) # type: ignore
     def battle_shout(self, party: Party) -> None:
         stacks = self.effects.count('Might')
         self.effects.remove_name('Might')
@@ -309,7 +309,7 @@ class Shaman(Character):
         target.effects.add_stacks(Might, stacks=5, duration=3)
         target.effects.add_stacks(Toughness, stacks=5, duration=3)
 
-    @_action_decorator(cooldown=10, affected_by_blind=True) # type: ignore
+    @_action_decorator(cooldown=2, affected_by_blind=True) # type: ignore
     def poison_frost(self, target: Pawn) -> None:
         '''
         Apply a frost based poison to the target, 2 stacks of

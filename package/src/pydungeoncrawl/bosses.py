@@ -1,3 +1,4 @@
+import copy
 import abc
 import heapq
 import itertools
@@ -256,6 +257,7 @@ class KoboldGoddess(Boss):
         return self._get_target(party)
 
     def _tick_logic(self, party: Party, board: Board):
+        self.telegraph = None
         target = self._get_target(party)
 
         if self._turn and self._turn % 5 == 0:
@@ -318,23 +320,22 @@ class SavageMountainTroll(Boss):
         self._melee_turn_counter = 0
         self._cycle_turn_counter = 0
         self._cycling = False
-        self._action_cycle = itertools.cycle([self.crushing_attack, self.thunderous_roar, self.stomp])
-        self._last_party_positions : List[Point] = [] 
+        self._action_cycle = itertools.cycle([self.decimate, self.roar_of_giants, self.colossal_smash])
+        self._furthest_position : Point = Point(0, 0)
 
     def get_target(self, party: Party) -> Pawn:
         # get closest party member
         return min(party.members, key=lambda p: distance_between(self.position, p.position))
 
     def _tick_logic(self, party: Party, board: Board):
+        self.telegraph = None
         target = self.get_target(party)
 
         if self._turn and self._turn % 10 == 0:
             self._cycling = True
 
         if self._throwing:
-            self.boulder(
-                max(self._last_party_positions, key=lambda p: distance_between(self.position, p)),
-                board)
+            self.throw_boulder(self._furthest_position, board)
         
         if self._was_in_melee and distance_between(self.position, target.position) > 1.5:
             self._melee_turn_counter += 1
@@ -351,34 +352,34 @@ class SavageMountainTroll(Boss):
                     self._cycle_turn_counter += 1
                     next(self._action_cycle)(party, target=target)
             else:
-                self.move_toward(target)
+                path = list(self._astar(board=board, start=self.position, goal=target.position)) # type: ignore
+                if path:
+                    self.move_toward(path[0])
         
         self._throwing = random.random() <= 0.1 # 10% chance to throw a boulder
         if self._throwing:
-            self._last_party_positions = [p.position for p in party]
-            self.telegraph = "The savage mountain troll is about to throw a boulder at the furthest party member's position!"
-
-
-        
+            person = max(party.members, key=lambda player: distance_between(self.position, player.position))
+            self._furthest_position = copy.copy(person.position)
+            self.telegraph = f"The savage mountain troll is about to throw a boulder at {person.name}'s position!"
 
     @_action_decorator(cooldown=10, melee=True) # type: ignore
-    def crushing_attack(self, party: Party, **kwargs):
+    def decimate(self, party: Party, **kwargs):
         target = self.get_target(party)
         target._take_damage(self, self.calculate_damage(50, target), "physical") # high dmg due to equipped TreeTrunk
         self._was_in_melee = True
     
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=False) # type: ignore
-    def thunderous_roar(self, party: Party, **kwargs):
+    def roar_of_giants(self, party: Party, **kwargs):
         for pawn in party:
             pawn.effects.add_stacks(Frailty, stacks=10, duration=3)
     
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=True, affected_by_root=True) # type: ignore
-    def stomp(self, party: Party, **kwargs):
+    def colossal_smash(self, party: Party, **kwargs):
         for pawn in list(party.dps) + [party.healer]:
             pawn._take_damage(self, self.calculate_damage(40, pawn), "physical")
     
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=True, affected_by_root=False) # type: ignore
-    def boulder(self, point: Point, board: Board,):
+    def throw_boulder(self, point: Point, board: Board,):
         target = board.at(point)
         if target and target.occupant:
             target.occupant._take_damage(self, self.calculate_damage(40, target.occupant), "physical")

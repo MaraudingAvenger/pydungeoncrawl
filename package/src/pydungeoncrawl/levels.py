@@ -18,3 +18,8 @@ class ForestPath(Level):
     def __init__(self, party: Party, boss:Boss, show_board: bool=True, tick_speed: float=0.25) -> None:
         board = get_map('forest_path.json')
         super().__init__(board=board, party=party, boss=boss, show_board=show_board, tick_speed=tick_speed)
+        
+class RiverFord(Level):
+    def __init__(self, party: Party, boss:Boss, show_board: bool=True, tick_speed: float=0.25) -> None:
+        board = get_map('river_ford.json')
+        super().__init__(board=board, party=party, boss=boss, show_board=show_board, tick_speed=tick_speed)

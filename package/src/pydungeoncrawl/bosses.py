@@ -335,7 +335,7 @@ class SavageMountainTroll(Boss):
             self._cycling = True
 
         if self._throwing:
-            self.throw_boulder(self._furthest_position, board)
+            self.throw_boulder(self._furthest_position, party)
         
         if self._was_in_melee and distance_between(self.position, target.position) > 1.5:
             self._melee_turn_counter += 1
@@ -365,7 +365,7 @@ class SavageMountainTroll(Boss):
     @_action_decorator(cooldown=10, melee=True) # type: ignore
     def decimate(self, party: Party, **kwargs):
         target = self.get_target(party)
-        target._take_damage(self, self.calculate_damage(50, target), "physical") # high dmg due to equipped TreeTrunk
+        target._take_damage(self, self.calculate_damage(80, target), "physical") # high dmg due to equipped TreeTrunk
         self._was_in_melee = True
     
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=False) # type: ignore
@@ -379,11 +379,12 @@ class SavageMountainTroll(Boss):
             pawn._take_damage(self, self.calculate_damage(40, pawn), "physical")
     
     @_action_decorator(cooldown=10, melee=False, affected_by_blind=True, affected_by_root=False) # type: ignore
-    def throw_boulder(self, point: Point, board: Board,):
-        target = board.at(point)
-        if target and target.occupant:
-            target.occupant._take_damage(self, self.calculate_damage(40, target.occupant), "physical")
-            target.occupant.effects.add(Stun(duration=2))
+    def throw_boulder(self, point: Point, party: Party):
+        unlucky = list(filter(lambda target: target.position == point, party.members))
+        if unlucky:
+            target = unlucky[0]
+            target._take_damage(self, self.calculate_damage(40, target), "physical")
+            target.effects.add(Stun(duration=2))
     
     @_action_decorator(cooldown=1, melee=False, affected_by_blind=True, affected_by_root=True) # type: ignore
     def death_charge(self, party: Party, board: Board):

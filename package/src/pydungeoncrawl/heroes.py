@@ -10,7 +10,7 @@ from .armor import ClothArmor, LeatherArmor, PlateArmor, ChainmailArmor, Shield
 from .weapons import Sword, Claymore, Mace, Dagger, Staff, ShortBow, Wand, SideKnife, Lute
 
 from .buffs import *
-from .debuffs import *
+from .debuffs import * 
 
 
 ###############

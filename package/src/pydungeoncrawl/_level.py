@@ -38,11 +38,11 @@ class Level:
         for pawn, square in zip(party, party_starty):
             pawn._position = square.position
             pawn.move_history = [square.position]
-            pawn.face(random.choice(board.get_adjacent_squares(pawn.position)))
+            pawn.face(random.choice(board.get_adjacent_squares(pawn.position))) # type: ignore
 
         boss._position = boss_starty.position
         boss.move_history = [boss_starty.position]
-        boss.face(random.choice(board.get_adjacent_squares(boss.position)))
+        boss.face(random.choice(board.get_adjacent_squares(boss.position))) # type: ignore
         
         self.board = board
         self.party = party

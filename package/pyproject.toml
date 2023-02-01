@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pydungeoncrawl"
-version = "0.1.4"
+version = "0.1.5"
 authors = [
   { name="Luke Chambers", email="marauding.avenger@gmail.com" },
   { name="Shaun Eames", email="Nythious@gmail.com" }

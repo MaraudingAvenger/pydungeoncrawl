@@ -529,7 +529,6 @@ class ChessMaster(Boss):
     def curtain(self, _party: Party, board: Board):
         adding_lava = True
         if self._turn_counter >= board.width // 3:
-            self._turn_counter = 0
             adding_lava = False
 
         # top

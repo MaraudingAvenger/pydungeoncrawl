@@ -104,7 +104,14 @@ class Board:
                 if square.occupied and square.position != square.occupant.position: # type: ignore
                     square.occupant = None
                 square.trigger_effect()
+    @property
+    def width(self) -> int:
+        return len(self.grid[0])
 
+    @property
+    def height(self) -> int:
+        return len(self.grid)
+        
     def at(self, position: Union[Point, Tuple[int, int]]) -> Square | None:
         "get square at position (x, y)"
 

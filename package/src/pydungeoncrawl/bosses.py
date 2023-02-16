@@ -98,7 +98,7 @@ class Golem(Boss):
 
         # Telegraphing
         if self._ability_cooldowns.get('Aoe', 0) == 1:
-            self.telegraph = "I'm going to attack EVERYONE next turn!"
+            self.telegraph = "is going to attack EVERYONE next turn!"
 
         # Combat logic
         if distance_between(self.position, target.position) > 1.5:
@@ -149,7 +149,7 @@ class TrainingDummy(Boss):
     def _tick_logic(self, party: Party, board: Board):
         target = self.get_target(party)
 
-        self.telegraph = f"I'm going to insult the closest person!"
+        self.telegraph = f"is going to insult the closest person!"
 
         self.face(target)
         if not self.is_on_cooldown("make a ruckus"):
@@ -160,7 +160,7 @@ class TrainingDummy(Boss):
 
 class LostKobold(Boss):
     def __init__(self):
-        name="Lost Kobold"
+        name="Kipper"
         position=Point(0, 0)
         health_max=5000
         super().__init__(name=name, position=position, health_max=health_max)
@@ -186,7 +186,7 @@ class LostKobold(Boss):
 
 class KoboldMother(Boss):
     def __init__(self):
-        name="Kobold Mother"
+        name="Lytharra"
         position=Point(0, 0)
         health_max=10000
         super().__init__(name=name, position=position, health_max=health_max)
@@ -212,7 +212,7 @@ class KoboldMother(Boss):
 
 class KoboldQueen(Boss):
     def __init__(self):
-        name="Kobold Queen"
+        name="Shyraki"
         position=Point(0, 0)
         health_max=20000
         super().__init__(name=name, position=position, health_max=health_max)
@@ -245,7 +245,7 @@ class KoboldQueen(Boss):
 
 class KoboldGoddess(Boss):
     def __init__(self):
-        name="Kobold Goddess"
+        name="Vyrliath"
         position=Point(0, 0)
         health_max=20000
         super().__init__(name=name, position=position, health_max=health_max)
@@ -262,7 +262,7 @@ class KoboldGoddess(Boss):
 
         if self._turn and self._turn % 5 == 0:
             self.last_party_positions = [p.position for p in party]
-            self.telegraph = "I'm going to devour your souls if you don't move next turn!!!"
+            self.telegraph = "is going to devour your souls if you don't move this turn!!!"
         elif self.telegraph:
             self.devour_souls(party)
         elif distance_between(self.position, target.position) > 1.5:
@@ -360,7 +360,7 @@ class SavageMountainTroll(Boss):
         if self._throwing:
             person = max(party.members, key=lambda player: distance_between(self.position, player.position))
             self._furthest_position = copy.copy(person.position)
-            self.telegraph = f"The savage mountain troll is about to throw a boulder at {person.name}'s position!"
+            self.telegraph = f"is about to throw a boulder at {person.name}'s position!"
 
     @_action_decorator(cooldown=10, melee=True) # type: ignore
     def decimate(self, party: Party, **kwargs):
@@ -396,3 +396,161 @@ class SavageMountainTroll(Boss):
         target._take_damage(self, self.calculate_damage(1000, target), "physical")
         self._was_in_melee = True
         self._melee_turn_counter = 0
+
+
+class ChessMaster(Boss):
+    def __init__(self):
+        name="Chess Master"
+        position=Point(0, 0)
+        health_max=200_000
+        super().__init__(name=name, position=position, health_max=health_max)
+
+        self._turn_counter = 0
+        self._action_cycle = itertools.cycle([self.king, self.queen, self.rook, self.bishop, self.knight, self.curtain])
+        self._action_name_cycle = itertools.cycle(["king", "queen", "rook", "bishop", "knight", "pawn advance"])
+        self._turn_counter = 0
+
+    def get_target(self, party: Party) -> Pawn:
+        # get random party member
+        return random.choice(party.members)
+
+    def _tick_logic(self, party: Party, board: Board):
+        if self.telegraph:
+            next(self._action_cycle)(party, board)
+            self.telegraph=None
+
+        if self._turn and self._turn % 5 == 0:
+            self._target = self.get_target(party)
+            self._attack_position = copy.copy(self._target.position)
+            action = next(self._action_name_cycle)
+            if action != 'pawn advance':
+                self.telegraph = f"is going to use a {action} attack on {self._target.name}!"
+            else:
+                self.telegraph = f"is going to advance the pawn row!"
+
+        if self._turn_counter:
+            self.curtain(party, board)  
+
+    @_action_decorator(cooldown=1, melee=False, affected_by_blind=False, affected_by_root=False) # type: ignore
+    def king(self, party: Party, board: Board):
+        for xmod in (-1, 0, 1):
+            for ymod in (-1, 0, 1):
+                if xmod == 0 and ymod == 0:
+                    continue
+                x = self._attack_position.x + xmod
+                y = self._attack_position.y + ymod
+                if x < 0 or x >= board.width or y < 0 or y >= board.height:
+                    continue
+                for member in party.members:
+                    if member.position == Point(x, y):
+                        member._take_damage(self, self.calculate_damage(160, member), "physical")
+    
+    @_action_decorator(cooldown=1, melee=False, affected_by_blind=False, affected_by_root=False) # type: ignore
+    def queen(self, party: Party, board: Board):
+        moves = self._queen_moves(board, self._attack_position.x, self._attack_position.y)
+        for x, y in moves:
+            for member in party.members:
+                if member.position == Point(x, y):
+                    member._take_damage(self, self.calculate_damage(160, member), "physical")
+
+    @_action_decorator(cooldown=1, melee=False, affected_by_blind=False, affected_by_root=False) # type: ignore
+    def rook(self, party: Party, board: Board):
+        moves = self._rook_moves(board, self._attack_position.x, self._attack_position.y)
+        for x, y in moves:
+            for member in party.members:
+                if member.position == Point(x, y):
+                    member._take_damage(self, self.calculate_damage(160, member), "physical")
+
+    @_action_decorator(cooldown=1, melee=False, affected_by_blind=False, affected_by_root=False) # type: ignore
+    def bishop(self, party: Party, board: Board):
+        moves = self._bishop_moves(board, self._attack_position.x, self._attack_position.y)
+        for x, y in moves:
+            for member in party.members:
+                if member.position == Point(x, y):
+                    member._take_damage(self, self.calculate_damage(160, member), "physical")
+
+    @_action_decorator(cooldown=1, melee=False, affected_by_blind=False, affected_by_root=False) # type: ignore
+    def knight(self, party: Party, board: Board):
+        moves = self._knight_moves(board, self._attack_position.x, self._attack_position.y)
+        for x, y in moves:
+            for member in party.members:
+                if member.position == Point(x, y):
+                    member._take_damage(self, self.calculate_damage(160, member), "physical")
+
+    def _bishop_moves(self, board: Board, x: int, y: int) -> set[tuple[int,int]]:
+        moves = set()
+        for i in range(1, board.width):
+            if x + i <= board.width and y + i <= board.width:
+                moves.add((x+i, y+i))
+            if x + i <= board.width and y - i >= 0:
+                moves.add((x+i, y-i))
+            if x - i >= 0 and y + i <= board.width:
+                moves.add((x-i, y+i))
+            if x - i >= 0 and y - i >= 0:
+                moves.add((x-i, y-i))
+        return moves
+
+    def _queen_moves(self, board: Board, x: int, y: int) -> set[tuple[int,int]]:
+        moves = set()
+        
+        # Horizontal and vertical moves
+        for i in range(board.width):
+            if i != x:
+                moves.add((i, y))
+            if i != y:
+                moves.add((x, i))
+        
+        # Diagonal moves
+        moves = moves.union(self._bishop_moves(board, x, y))
+        
+        return moves
+
+    def _rook_moves(self, board: Board, x: int, y: int) -> set[tuple[int,int]]:
+        moves = set()
+        
+        # Horizontal and vertical moves
+        for i in range(board.width):
+            if i != x:
+                moves.add((i, y))
+            if i != y:
+                moves.add((x, i))
+        
+        return moves
+
+    def _knight_moves(self, board: Board, x: int, y: int) -> set[tuple[int,int]]:
+        moves = set()
+        possible_moves = [(x+2, y+1), (x+2, y-1), (x-2, y+1), (x-2, y-1), (x+1, y+2), (x+1, y-2), (x-1, y+2), (x-1, y-2)]
+        for i, j in possible_moves:
+            if 0 <= i <= board.width-1 and 0 <= j <= board.height-1:
+                moves.add((i, j))
+        return moves
+    
+    @_action_decorator(cooldown=1, melee=False, affected_by_blind=False, affected_by_root=False) # type: ignore
+    def curtain(self, _party: Party, board: Board):
+        adding_lava = True
+        if self._turn_counter >= board.width // 3:
+            self._turn_counter = 0
+            adding_lava = False
+
+        # top
+        if self._turn_counter > 0:
+            prev = self._turn_counter - 1
+            for square in board.grid[prev]:
+                square.toggle_lava()
+        if adding_lava:
+            for square in board.grid[self._turn_counter]:
+                square.toggle_lava()
+
+        # bottom
+        if self._turn_counter > 0:
+            prev = len(board.grid) - self._turn_counter
+            for square in board.grid[prev]:
+                square.toggle_lava()
+        if adding_lava:
+            for square in board.grid[len(board.grid) - self._turn_counter - 1]:
+                square.toggle_lava()
+
+        if adding_lava:
+            self._turn_counter += 1
+        else:
+            self._turn_counter = 0

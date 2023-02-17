@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pydungeoncrawl"
-version = "0.1.6"
+version = "0.1.7"
 authors = [
   { name="Luke Chambers", email="marauding.avenger@gmail.com" },
   { name="Shaun Eames", email="Nythious@gmail.com" }
@@ -17,7 +17,6 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License (GPL)",
     "Operating System :: OS Independent",
     "Development Status :: 3 - Alpha",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",

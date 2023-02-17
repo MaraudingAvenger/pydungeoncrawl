@@ -111,7 +111,7 @@ class Effect:
     def __hash__(self) -> int:
         return int.from_bytes(hashlib.md5(''.join((
             self.name, ''.join(self.category), self.description, self.symbol
-        )).encode()).digest())
+        )).encode()).digest(), byteorder='big')
 
 
 class Effects:
